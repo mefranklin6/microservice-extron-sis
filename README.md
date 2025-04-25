@@ -2,6 +2,8 @@
 
 Universal OpenAV microservice for Extron devices that support Simple Instruction Set (SIS)
 
+Not affliated with Extron.  SIS and Simple Instruction Set are copywrights of Extron.
+
 Supports telnet and serial connections
 
 You may find the manual for your device helpful for finding endpoint names, as many commands retain the same name
