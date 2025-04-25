@@ -20,4 +20,4 @@ RUN go get -u
 RUN go build -o /go/bin/microservice
 
 # Use this entrypoint for a a fully functional docker image
-ENTRYPOINT /go/bin/microservice
+ENTRYPOINT ["/go/bin/microservice"]
