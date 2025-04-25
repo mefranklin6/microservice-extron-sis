@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Dartmouth-OpenAV/microservice-framework/framework"
+	"github.com/mefranklin6/microservice-framework/framework" // Change after PR#3 for Dartmouth
 )
 
 func setFrameworkGlobals() {

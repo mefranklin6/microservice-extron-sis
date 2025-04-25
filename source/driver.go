@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Dartmouth-OpenAV/microservice-framework/framework"
+	"github.com/mefranklin6/microservice-framework/framework" // Change after PR#3 for Dartmouth
 )
 
 func loginNegotiation(socketKey string) (success bool) {
