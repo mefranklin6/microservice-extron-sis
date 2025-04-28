@@ -130,13 +130,6 @@ func sendBasicCommandDo(socketKey string, cmdString string) (string, error) {
 		return "", err
 	}
 
-	// TODO: Remove after testing
-	deviceType, err := findDeviceType(socketKey)
-	if err != nil {
-		framework.AddToErrors(socketKey, err.Error())
-	}
-	framework.Log(function + " - Device type: " + deviceType)
-
 	sent := framework.WriteLineToSocket(socketKey, cmdString)
 	if sent != true {
 		errMsg := fmt.Sprintf(function + " - i5kcfoe - error sending command")
