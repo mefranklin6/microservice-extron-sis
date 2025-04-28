@@ -33,7 +33,7 @@ var ErrorResponsesMap = map[string]string{
 	"E28": "Bad name or file not found",
 }
 
-var getCommandsMap = map[string]string{
+var GetCommandsMap = map[string]string{
 	"firmwareversion":      "Q\r", // is universal across all products
 	"temperature":          "W20STAT\r",
 	"partnumber":           "N\r",
