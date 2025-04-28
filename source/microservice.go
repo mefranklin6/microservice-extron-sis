@@ -8,6 +8,8 @@ import (
 	"github.com/mefranklin6/microservice-framework/framework" // Change after PR#3 for Dartmouth
 )
 
+var deviceTypes = make(map[string]string) // socketKey -> deviceType
+
 func setFrameworkGlobals() {
 	// globals that change modes in the microservice framework:
 	framework.MicroserviceName = "OpenAV Extron SIS MicroService"
@@ -109,6 +111,46 @@ func formatCommand(command string, arg1 string, arg2 string, arg3 string) string
 	return cmd
 }
 
+func findDeviceType(socketKey string) (string, error) {
+	function := "findDeviceType"
+
+	if deviceType, exists := deviceTypes[socketKey]; exists {
+		return deviceType, nil // cache hit
+	}
+
+	// Send a command to get the device type
+	cmdString := GetCommandsMap["modeldescription"]
+	resp, err := sendBasicCommand(socketKey, cmdString)
+	if err != nil {
+		errMsg := fmt.Sprintf(function+" - jrBaq3 - error getting device type: %s", err.Error())
+		return "", errors.New(errMsg)
+	}
+
+	logStr := fmt.Sprintf("%s - %s - Device type response: %s", function, socketKey, resp)
+	framework.Log(logStr)
+
+	deviceType := "unknown"
+
+	resp = strings.ToLower(resp)
+
+	switch {
+	case strings.Contains(resp, "matrix"):
+		deviceType = "Matrix"
+	case strings.Contains(resp, "scaling presentation switcher"):
+		deviceType = "Scaler" // IN 16xx series
+	case resp == "seemless presentation switcher":
+		deviceType = "Scaler" // IN 18xx series
+	case strings.Contains(resp, "dmp"):
+		deviceType = "DSP"
+	default:
+		deviceType = "unknown"
+	}
+
+	deviceTypes[socketKey] = deviceType
+
+	return deviceType, nil
+}
+
 // Every microservice using this golang microservice framework needs to provide this function to invoke functions to do sets.
 // socketKey is the network connection for the framework to use to communicate with the device.
 // setting is the first parameter in the URI.
@@ -120,6 +162,12 @@ func formatCommand(command string, arg1 string, arg2 string, arg3 string) string
 //	  ":address/:setting/:arg1/:arg2"
 func doDeviceSpecificSet(socketKey string, setting string, arg1 string, arg2 string, arg3 string) (string, error) {
 	function := "doDeviceSpecificSet"
+
+	deviceType, err := findDeviceType(socketKey)
+	if err != nil {
+		framework.AddToErrors(socketKey, err.Error())
+	}
+	framework.Log(function + " - Device type: " + deviceType)
 
 	if command, exists := setCommandsMap[setting]; exists {
 		command = formatCommand(command, arg1, arg2, arg3)
@@ -139,7 +187,7 @@ func doDeviceSpecificSet(socketKey string, setting string, arg1 string, arg2 str
 	// If we get here, we didn't recognize the setting.  Send an error back to the config writer who had a bad URL.
 	errMsg := function + " - unrecognized setting in URI: " + setting
 	framework.AddToErrors(socketKey, errMsg)
-	err := errors.New(errMsg)
+	err = errors.New(errMsg)
 	return setting, err
 }
 
@@ -154,6 +202,12 @@ func doDeviceSpecificSet(socketKey string, setting string, arg1 string, arg2 str
 //	  ":address/:setting/:arg1/:arg2"
 func doDeviceSpecificGet(socketKey string, setting string, arg1 string, arg2 string) (string, error) {
 	function := "doDeviceSpecificGet"
+
+	deviceType, err := findDeviceType(socketKey)
+	if err != nil {
+		framework.AddToErrors(socketKey, err.Error())
+	}
+	framework.Log(function + " - Device type: " + deviceType)
 
 	if command, exists := GetCommandsMap[setting]; exists {
 		command = formatCommand(command, arg1, arg2, "")
@@ -173,7 +227,7 @@ func doDeviceSpecificGet(socketKey string, setting string, arg1 string, arg2 str
 	// If we get here, we didn't recognize the setting.  Send an error back to the config writer who had a bad URL.
 	errMsg := function + " - unrecognized setting in URI: " + setting
 	framework.AddToErrors(socketKey, errMsg)
-	err := errors.New(errMsg)
+	err = errors.New(errMsg)
 	return setting, err
 }
 

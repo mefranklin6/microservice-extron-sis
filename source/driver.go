@@ -9,8 +9,6 @@ import (
 	"github.com/mefranklin6/microservice-framework/framework" // Change after PR#3 for Dartmouth
 )
 
-var deviceTypes = make(map[string]string) // socketKey -> deviceType
-
 func loginNegotiation(socketKey string) (success bool) {
 	function := "loginNegotiation"
 
@@ -93,46 +91,6 @@ func formatDeviceErrMessage(socketKey string, resp string) string {
 		return errMsg
 	}
 	return ""
-}
-
-func findDeviceType(socketKey string) (string, error) {
-	function := "findDeviceType"
-
-	if deviceType, exists := deviceTypes[socketKey]; exists {
-		return deviceType, nil // cache hit
-	}
-
-	// Send a command to get the device type
-	cmdString := GetCommandsMap["modeldescription"]
-	resp, err := sendBasicCommand(socketKey, cmdString)
-	if err != nil {
-		errMsg := fmt.Sprintf(function+" - jrBaq3 - error getting device type: %s", err.Error())
-		return "", errors.New(errMsg)
-	}
-
-	logStr := fmt.Sprintf("%s - %s - Device type response: %s", function, socketKey, resp)
-	framework.Log(logStr)
-
-	deviceType := "unknown"
-
-	resp = strings.ToLower(resp)
-
-	switch {
-	case strings.Contains(resp, "matrix"):
-		deviceType = "Matrix"
-	case strings.Contains(resp, "scaling presentation switcher"):
-		deviceType = "Scaler" // IN 16xx series
-	case resp == "seemless presentation switcher":
-		deviceType = "Scaler" // IN 18xx series
-	case strings.Contains(resp, "dmp"):
-		deviceType = "DSP"
-	default:
-		deviceType = "unknown"
-	}
-
-	deviceTypes[socketKey] = deviceType
-
-	return deviceType, nil
 }
 
 // MAIN FUNCTIONS
