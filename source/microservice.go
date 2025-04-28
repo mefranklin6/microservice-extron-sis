@@ -155,7 +155,7 @@ func doDeviceSpecificSet(socketKey string, setting string, arg1 string, arg2 str
 func doDeviceSpecificGet(socketKey string, setting string, arg1 string, arg2 string) (string, error) {
 	function := "doDeviceSpecificGet"
 
-	if command, exists := getCommandsMap[setting]; exists {
+	if command, exists := GetCommandsMap[setting]; exists {
 		command = formatCommand(command, arg1, arg2, "")
 		return sendBasicCommand(socketKey, command)
 	}
