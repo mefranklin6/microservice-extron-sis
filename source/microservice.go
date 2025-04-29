@@ -172,12 +172,6 @@ func findDeviceType(socketKey string) (string, error) {
 func doDeviceSpecificSet(socketKey string, setting string, arg1 string, arg2 string, arg3 string) (string, error) {
 	function := "doDeviceSpecificSet"
 
-	deviceType, err := findDeviceType(socketKey)
-	if err != nil {
-		framework.AddToErrors(socketKey, err.Error())
-	}
-	framework.Log(function + " - Device type: " + deviceType)
-
 	if command, exists := publicSetCmdEndpoints[setting]; exists {
 		command = formatCommand(command, arg1, arg2, arg3)
 		return sendBasicCommand(socketKey, command)
@@ -196,7 +190,7 @@ func doDeviceSpecificSet(socketKey string, setting string, arg1 string, arg2 str
 	// If we get here, we didn't recognize the setting.  Send an error back to the config writer who had a bad URL.
 	errMsg := function + " - unrecognized setting in URI: " + setting
 	framework.AddToErrors(socketKey, errMsg)
-	err = errors.New(errMsg)
+	err := errors.New(errMsg)
 	return setting, err
 }
 
@@ -211,12 +205,6 @@ func doDeviceSpecificSet(socketKey string, setting string, arg1 string, arg2 str
 //	  ":address/:setting/:arg1/:arg2"
 func doDeviceSpecificGet(socketKey string, setting string, arg1 string, arg2 string) (string, error) {
 	function := "doDeviceSpecificGet"
-
-	deviceType, err := findDeviceType(socketKey)
-	if err != nil {
-		framework.AddToErrors(socketKey, err.Error())
-	}
-	framework.Log(function + " - Device type: " + deviceType)
 
 	if command, exists := publicGetCmdEndpoints[setting]; exists {
 		command = formatCommand(command, arg1, arg2, "")
@@ -236,7 +224,7 @@ func doDeviceSpecificGet(socketKey string, setting string, arg1 string, arg2 str
 	// If we get here, we didn't recognize the setting.  Send an error back to the config writer who had a bad URL.
 	errMsg := function + " - unrecognized setting in URI: " + setting
 	framework.AddToErrors(socketKey, errMsg)
-	err = errors.New(errMsg)
+	err := errors.New(errMsg)
 	return setting, err
 }
 

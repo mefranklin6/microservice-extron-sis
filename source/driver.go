@@ -134,7 +134,7 @@ func getVideoRouteDo(socketKey string, output string) (string, error) {
 	cmdString := ""
 	switch deviceType {
 	case "Matrix":
-		cmdString = fmt.Sprintf(internalGetCmdMap["readvideooutputtie"], output)
+		cmdString = formatCommand(internalGetCmdMap["readvideooutputtie"], output, "", "")
 	case "Scaler":
 		cmdString = internalGetCmdMap["viewvideoinput"]
 	}
