@@ -83,7 +83,7 @@ func ensureActiveConnection(socketKey string) error {
 func formatDeviceErrMessage(socketKey string, resp string) string {
 	function := "formatDeviceErrMessage"
 
-	if errorMessage, exists := ErrorResponsesMap[resp]; exists { // known error
+	if errorMessage, exists := errorResponsesMap[resp]; exists { // known error
 		errMsg := fmt.Sprintf("%s - I9WuD - device returned error: %s: %s", function, resp, errorMessage)
 		return errMsg
 	} else if strings.HasPrefix(resp, "E") && len(resp) == 3 { // unknown error
@@ -94,6 +94,67 @@ func formatDeviceErrMessage(socketKey string, resp string) string {
 }
 
 // MAIN FUNCTIONS
+
+func getVideoRoute(socketKey string, output string) (string, error) {
+	function := "getVideoRoute"
+
+	value := `"unknown"`
+	err := error(nil)
+	maxRetries := 2
+	for maxRetries > 0 {
+		value, err = getVideoRouteDo(socketKey, output)
+		if value == `"unknown"` { // Something went wrong - perhaps try again
+			framework.Log(function + " - mlduq - retrying operation")
+			maxRetries--
+			time.Sleep(1 * time.Second)
+			if maxRetries == 0 {
+				errMsg := fmt.Sprintf(function + "bmi8g - max retries reached")
+				framework.AddToErrors(socketKey, errMsg)
+			}
+		} else { // Succeeded
+			maxRetries = 0
+		}
+	}
+
+	return value, err
+}
+
+func getVideoRouteDo(socketKey string, output string) (string, error) {
+	function := "getVideoRouteDo"
+
+	framework.Log(function + " - output: " + output)
+
+	deviceType, err := findDeviceType(socketKey)
+	if err != nil {
+		errMsg := fmt.Sprintf(function+" - QnKnu3 - error finding device type: %s", err.Error())
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	cmdString := ""
+	switch deviceType {
+	case "Matrix":
+		cmdString = fmt.Sprintf(internalGetCmdMap["readvideooutputtie"], output)
+	case "Scaler":
+		cmdString = internalGetCmdMap["viewvideoinput"]
+	}
+
+	if cmdString == "" {
+		errMsg := fmt.Sprintf(function+" - xzk5wH - no command found for device type: %s", deviceType)
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	resp, err := sendBasicCommand(socketKey, cmdString)
+	if err != nil {
+		errMsg := fmt.Sprintf(function+" - cid6bw - error getting video route: %s", err.Error())
+		return errMsg, errors.New(errMsg)
+	}
+
+	framework.Log(fmt.Sprintf("%s - %s - response: %s", function, socketKey, resp))
+
+	return resp, nil
+}
 
 func sendBasicCommand(socketKey string, cmdString string) (string, error) {
 	function := "sendBasicCommand"

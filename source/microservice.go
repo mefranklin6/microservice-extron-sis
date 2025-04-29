@@ -23,7 +23,7 @@ func setFrameworkGlobals() {
 	framework.RegisterMainSetFunc(doDeviceSpecificSet)
 }
 
-var ErrorResponsesMap = map[string]string{
+var errorResponsesMap = map[string]string{
 	"E10": "Unrecognized command",
 	"E12": "Invalid port number",
 	"E13": "Invalid paramater (number is out of range)",
@@ -35,7 +35,8 @@ var ErrorResponsesMap = map[string]string{
 	"E28": "Bad name or file not found",
 }
 
-var GetCommandsMap = map[string]string{
+// These can be called as endpoints but may not be part of OpenAV spec
+var publicGetCmdEndpoints = map[string]string{
 	"firmwareversion":      "Q\r", // is universal across all products
 	"temperature":          "W20STAT\r",
 	"partnumber":           "N\r",
@@ -53,6 +54,12 @@ var GetCommandsMap = map[string]string{
 	"viewpowersavemode":    "\x1BPSAV\r",
 	"viewglobalmute":       "B\r", // non-matrix
 
+	"viewinputname":         "\x1B%sNI\r",    // arg1: input name
+	"queryhdcpinputstatus":  "\x1BI%sHDCP\r", // arg1: input name
+	"queryhdcpoutputstatus": "\x1BO%sHDCP\r", // arg1: output name
+}
+
+var internalGetCmdMap = map[string]string{
 	"viewvideosignalpresence": "\x1B0LS\r", // non-matrix
 	"viewallinputconnections": "0LS\r",     // matrix
 	"viewvideoinput":          "&\r",       // non-matrix
@@ -61,22 +68,23 @@ var GetCommandsMap = map[string]string{
 	"viewloopoutinput":        "\x1BLOUT\r",
 	"viewallvideoties":        "\x1B0*1*1VC\r", // matrix
 	"viewallaudioties":        "\x1B0*1*2VC\r", // matrix
+	"readvideooutputtie":      "%s%\r",         // arg1: output name, matrix
+	"readaudiooutputtie":      "%s$\r",         // arg1: output name, matrix
 	"viewmutestatus":          "%s*B\r",        // non-matrix
 	"viewoutputvideomutes":    "\x1BVM\r",      // matrix
-
-	"viewinputname":         "\x1B%sNI\r",    // arg1: input name
-	"queryhdcpinputstatus":  "\x1BI%sHDCP\r", // arg1: input name
-	"queryhdcpoutputstatus": "\x1BO%sHDCP\r", // arg1: output name
 }
 
-var setCommandsMap = map[string]string{
-	"globalvideomute":        "1*B\r",
-	"globalvideoandsyncmute": "2*B\r",
-	"globalvideounmute":      "0*B\r",
-
+// These can be called as endpoints but may not be part of OpenAV spec
+var publicSetCmdEndpoints = map[string]string{
 	"lockallfrontpanelfunctions":      "1X\r",
 	"lockadvancedfrontpanelfunctions": "2X\r",
 	"unlockallfrontpanelfunctions":    "0X\r",
+}
+
+var internalSetCmdMap = map[string]string{
+	"globalvideomute":        "1*B\r",
+	"globalvideoandsyncmute": "2*B\r",
+	"globalvideounmute":      "0*B\r",
 
 	"audioandvideoroute": "%s!\r",        // arg1: input name, non-matrix
 	"videoroute":         "%s&\r",        // arg1: input name, non-matrix
@@ -118,8 +126,8 @@ func findDeviceType(socketKey string) (string, error) {
 		return deviceType, nil // cache hit
 	}
 
-	// Send a command to get the device type
-	cmdString := GetCommandsMap["modeldescription"]
+	// Haven't heard from device yet, send a query
+	cmdString := publicGetCmdEndpoints["modeldescription"]
 	resp, err := sendBasicCommand(socketKey, cmdString)
 	if err != nil {
 		errMsg := fmt.Sprintf(function+" - jrBaq3 - error getting device type: %s", err.Error())
@@ -133,6 +141,7 @@ func findDeviceType(socketKey string) (string, error) {
 
 	resp = strings.ToLower(resp)
 
+	// not complete: add more device types as needed
 	switch {
 	case strings.Contains(resp, "matrix"):
 		deviceType = "Matrix"
@@ -169,7 +178,7 @@ func doDeviceSpecificSet(socketKey string, setting string, arg1 string, arg2 str
 	}
 	framework.Log(function + " - Device type: " + deviceType)
 
-	if command, exists := setCommandsMap[setting]; exists {
+	if command, exists := publicSetCmdEndpoints[setting]; exists {
 		command = formatCommand(command, arg1, arg2, arg3)
 		return sendBasicCommand(socketKey, command)
 	}
@@ -209,7 +218,7 @@ func doDeviceSpecificGet(socketKey string, setting string, arg1 string, arg2 str
 	}
 	framework.Log(function + " - Device type: " + deviceType)
 
-	if command, exists := GetCommandsMap[setting]; exists {
+	if command, exists := publicGetCmdEndpoints[setting]; exists {
 		command = formatCommand(command, arg1, arg2, "")
 		return sendBasicCommand(socketKey, command)
 	}
@@ -217,12 +226,12 @@ func doDeviceSpecificGet(socketKey string, setting string, arg1 string, arg2 str
 	// Add a case statement for commands that require special processing.
 	// These calls can use 0, 1, or 2 arguments.
 
-	//switch setting {
-	//case "special1":
-	//	return getSpecial1(socketKey, arg1, arg2)
-	//case "special2":
-	//	return getSpecial2(socketKey, arg1, arg2)
-	//}
+	switch setting {
+	case "videoroute":
+		return getVideoRouteDo(socketKey, arg1) // arg1: output (if not matrix, use '1' for arg1)
+		//case "special2":
+		//	return getSpecial2(socketKey, arg1, arg2)
+	}
 
 	// If we get here, we didn't recognize the setting.  Send an error back to the config writer who had a bad URL.
 	errMsg := function + " - unrecognized setting in URI: " + setting
