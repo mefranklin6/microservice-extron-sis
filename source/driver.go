@@ -45,19 +45,33 @@ var publicGetCmdEndpoints = map[string]string{
 	"queryhdcpoutputstatus": "\x1BO%sHDCP\r", // arg1: output name
 }
 
-var internalGetCmdMap = map[string]string{
-	"viewvideosignalpresence": "\x1B0LS\r", // non-matrix
-	"viewallinputconnections": "0LS\r",     // matrix
-	"viewvideoinput":          "&\r",       // non-matrix
-	"viewaudioinput":          "$\r",       // non-matrix
-	"viewcurrentinput":        "!\r",       // non-matrix
-	"viewloopoutinput":        "\x1BLOUT\r",
-	"viewallvideoties":        "\x1B0*1*1VC\r", // matrix
-	"viewallaudioties":        "\x1B0*1*2VC\r", // matrix
-	"readvideooutputtie":      "%s%%\r",        // arg1: output name, matrix
-	"readaudiooutputtie":      "%s$\r",         // arg1: output name, matrix
-	"viewmutestatus":          "%s*B\r",        // non-matrix
-	"viewoutputvideomutes":    "\x1BVM\r",      // matrix
+var internalGetCmdMap = map[string]map[string]string{
+	"inputstatus": {
+		"matrix": "0LS\r",
+		"scaler": "\x1B0LS\r",
+	},
+	"videoroute": {
+		"matrix": "%s%%\r", // arg1: output name
+		"scaler": "&\r",
+	},
+	"audioroute": {
+		"matrix": "%s$\r", // arg1: output name
+		"scaler": "$\r",
+	},
+
+	//"viewvideoinput":          "&\r",       // non-matrix
+	//"viewcurrentinput":        "!\r",       // non-matrix
+
+	//"viewloopoutinput":        "\x1BLOUT\r",
+
+	//"viewallvideoties":        "\x1B0*1*1VC\r", // matrix
+	//"viewallaudioties":        "\x1B0*1*2VC\r", // matrix
+
+	//"readvideooutputtie":      "%s%%\r",        // arg1: output name, matrix
+
+	//"viewmutestatus":          "%s*B\r",        // non-matrix
+
+	//"viewoutputvideomutes":    "\x1BVM\r",      // matrix
 }
 
 // These can be called as endpoints but may not be part of OpenAV spec
@@ -84,6 +98,34 @@ var internalSetCmdMap = map[string]string{
 	"mutevideooutput":   "%s*1B\r", // arg1: output name
 	"mutevideoandsync":  "%s*2B\r", // arg1: output name
 	"unmutevideooutput": "%s*0B\r", // arg1: output name
+}
+
+// MAIN FUNCTIONS
+
+// Get functions
+func getVideoRouteDo(socketKey string, endpoint string, output string, _ string, _ string) (string, error) {
+	function := "getVideoRouteDo"
+
+	resp, err := deviceTypeDependantCommand(socketKey, "videoroute", output, "", "")
+	if err != nil {
+		errMsg := function + "- error getting video route: " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	// some non-matrix devices have leading zeroes in the response, remove them
+	if len(resp) == 2 && resp[0] == '0' {
+		resp = resp[1:]
+	}
+
+	return resp, nil
+}
+
+// Helper functions
+
+// function args are socketKey, endpoint, arg1, arg2, arg3
+var functionMap = map[string]func(string, string, string, string, string) (string, error){
+	"getVideoRoute": getVideoRouteDo,
 }
 
 func loginNegotiation(socketKey string) (success bool) {
@@ -243,71 +285,48 @@ func findDeviceType(socketKey string) (string, error) {
 	return deviceType, nil
 }
 
-// MAIN FUNCTIONS
-
-func getVideoRoute(socketKey string, output string) (string, error) {
-	function := "getVideoRoute"
+func endpointGet(socketKey string, endpoint string, arg1 string, arg2 string, arg3 string) (string, error) {
+	function := "endpointGet"
 
 	value := `"unknown"`
 	err := error(nil)
-	maxRetries := 2
-	for maxRetries > 0 {
-		value, err = getVideoRouteDo(socketKey, output)
-		if value == `"unknown"` { // Something went wrong - perhaps try again
-			framework.Log(function + " - mlduq - retrying operation")
-			maxRetries--
-			time.Sleep(1 * time.Second)
-			if maxRetries == 0 {
-				errMsg := fmt.Sprintf(function + "bmi8g - max retries reached")
-				framework.AddToErrors(socketKey, errMsg)
-			}
-		} else { // Succeeded
-			maxRetries = 0
-		}
+
+	if fn, exists := functionMap[endpoint]; exists {
+		value, err = fn(socketKey, endpoint, arg1, arg2, arg3)
+	} else {
+		errMsg := fmt.Sprintf(function+" - 7s5ce - no function found for endpoint: %s", endpoint)
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
 	}
 
 	return value, err
 }
 
-func getVideoRouteDo(socketKey string, output string) (string, error) {
-	function := "getVideoRouteDo"
-
-	framework.Log(function + " - output: " + output)
+func deviceTypeDependantCommand(socketKey string, endpoint string, arg1 string, arg2 string, arg3 string) (string, error) {
+	function := "deviceTypeDependantCommand"
 
 	deviceType, err := findDeviceType(socketKey)
 	if err != nil {
-		errMsg := fmt.Sprintf(function+" - QnKnu3 - error finding device type: %s", err.Error())
+		errMsg := fmt.Sprintf(function+" - l6ehb - error finding device type: %s", err.Error())
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
 
 	cmdString := ""
-	switch deviceType {
-	case "Matrix Switcher":
-		cmdString = formatCommand(internalGetCmdMap["readvideooutputtie"], output, "", "")
-	case "Scaler":
-		cmdString = internalGetCmdMap["viewvideoinput"]
-	}
+	cmdString = formatCommand(internalGetCmdMap[endpoint][deviceType], arg1, arg2, arg3)
 
 	if cmdString == "" {
-		errMsg := fmt.Sprintf(function+" - xzk5wH - no command found for device type: %s", deviceType)
+		errMsg := fmt.Sprintf(function+" - 7s5ce - no command found for device type: %s", deviceType)
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
-
 	resp, err := sendBasicCommand(socketKey, cmdString)
 	if err != nil {
-		errMsg := fmt.Sprintf(function+" - cid6bw - error getting video route: %s", err.Error())
+		errMsg := fmt.Sprintf(function+" - cid6bw - error getting endpoint: %s: %s", endpoint, err.Error())
 		return errMsg, errors.New(errMsg)
 	}
 
-	framework.Log(fmt.Sprintf("%s - %s - response: %s", function, socketKey, resp))
-
-	// some non-matrix devices have leading zeroes in the response, remove them
-	if len(resp) == 2 && resp[0] == '0' {
-		resp = resp[1:]
-	}
-
+	framework.Log(fmt.Sprintf("%s - %s - %s response: %s", function, socketKey, endpoint, resp))
 	return resp, nil
 }
 

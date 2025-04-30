@@ -77,7 +77,7 @@ func doDeviceSpecificGet(socketKey string, setting string, arg1 string, arg2 str
 
 	switch setting {
 	case "videoroute":
-		return getVideoRouteDo(socketKey, arg1) // arg1: output (if not matrix, use '1' for arg1)
+		return endpointGet(socketKey, "videoroute", arg1, "", "") // arg1: output (if not matrix, use '1' for arg1)
 		//case "special2":
 		//	return getSpecial2(socketKey, arg1, arg2)
 	}
