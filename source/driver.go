@@ -10,6 +10,8 @@ import (
 	"github.com/mefranklin6/microservice-framework/framework" // Change after PR#3 for Dartmouth
 )
 
+// Mappings //
+
 var errorResponsesMap = map[string]string{
 	"E10": "Unrecognized command",
 	"E12": "Invalid port number",
@@ -39,13 +41,22 @@ var publicGetCmdEndpoints = map[string]string{
 	"openconnections":      "\x1BCC\r",
 	"systemprocessorusage": "11I\r",
 	"viewpowersavemode":    "\x1BPSAV\r",
-	"viewglobalmute":       "B\r", // non-matrix
 
+	"viewglobalmute":        "B\r", // non-matrix
+	"viewloopoutinput":      "\x1BLOUT\r",
 	"viewinputname":         "\x1B%sNI\r",    // arg1: input name
 	"queryhdcpinputstatus":  "\x1BI%sHDCP\r", // arg1: input name
 	"queryhdcpoutputstatus": "\x1BO%sHDCP\r", // arg1: output name
 }
 
+// These can be called as endpoints but may not be part of OpenAV spec
+var publicSetCmdEndpoints = map[string]string{
+	"lockallfrontpanelfunctions":      "1X\r",
+	"lockadvancedfrontpanelfunctions": "2X\r",
+	"unlockallfrontpanelfunctions":    "0X\r",
+}
+
+// OpenAV spec get endpoint names with mappings for different device types
 var internalGetCmdMap = map[string]map[string]string{
 	"inputstatus": {
 		"Matrix Switcher": "0LS\r",
@@ -63,8 +74,6 @@ var internalGetCmdMap = map[string]map[string]string{
 	//"viewvideoinput":          "&\r",       // non-matrix
 	//"viewcurrentinput":        "!\r",       // non-matrix
 
-	//"viewloopoutinput":        "\x1BLOUT\r",
-
 	//"viewallvideoties":        "\x1B0*1*1VC\r", // matrix
 	//"viewallaudioties":        "\x1B0*1*2VC\r", // matrix
 
@@ -75,13 +84,7 @@ var internalGetCmdMap = map[string]map[string]string{
 	//"viewoutputvideomutes":    "\x1BVM\r",      // matrix
 }
 
-// These can be called as endpoints but may not be part of OpenAV spec
-var publicSetCmdEndpoints = map[string]string{
-	"lockallfrontpanelfunctions":      "1X\r",
-	"lockadvancedfrontpanelfunctions": "2X\r",
-	"unlockallfrontpanelfunctions":    "0X\r",
-}
-
+// TODO
 var internalSetCmdMap = map[string]string{
 	"globalvideomute":        "1*B\r",
 	"globalvideoandsyncmute": "2*B\r",
@@ -101,8 +104,6 @@ var internalSetCmdMap = map[string]string{
 	"unmutevideooutput": "%s*0B\r", // arg1: output name
 }
 
-// MAIN FUNCTIONS
-
 // Maps get endpoints to get functions so we can call them dynamically.
 // Make sure all future endpoints are added here.
 // function args are socketKey, endpoint, arg1, arg2, arg3
@@ -120,6 +121,9 @@ var getFunctionMap = map[string]func(string, string, string, string, string) (st
 
 }
 
+// Maps set endpoints to set functions so we can call them dynamically.
+// Make sure all future endpoints are added here.
+// function args are socketKey, endpoint, arg1, arg2, arg3
 var setFunctionMap = map[string]func(string, string, string, string, string) (string, error){
 	"power":              notImplemented, // TODO
 	"volume":             notImplemented, // TODO
@@ -133,7 +137,9 @@ var setFunctionMap = map[string]func(string, string, string, string, string) (st
 	"timedtriggerstate":  notImplemented, // TODO
 }
 
-// Get functions
+// Main Functions //
+
+// Get functions //
 func getVideoRouteDo(socketKey string, endpoint string, output string, _ string, _ string) (string, error) {
 	function := "getVideoRouteDo"
 
@@ -144,11 +150,11 @@ func getVideoRouteDo(socketKey string, endpoint string, output string, _ string,
 		return errMsg, errors.New(errMsg)
 	}
 
-	// some non-matrix devices have leading zeroes in the response, remove them
-	if len(resp) == 2 && resp[0] == '0' {
-		resp = resp[1:]
+	// some non-matrix devices have leading zeroes in the response, remove them.
+	// remember the response is wrapped in quotes
+	if len(resp) == 4 && resp[1] == '0' {
+		resp = resp[2:]
 	}
-
 	return resp, nil
 }
 
@@ -166,24 +172,25 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 	// scaler will do the same but with "*" between inputs
 	resp = strings.ReplaceAll(resp, `*`, ``)
 
-	// get character at position specified by input
+	// cast the input art to an integer
 	inputNum, err := strconv.Atoi(input)
 	if err != nil {
 		errMsg := function + " - invalid input number: " + input
 		framework.AddToErrors(socketKey, errMsg)
-		return "", errors.New(errMsg)
+		return errMsg, errors.New(errMsg)
 	}
 
 	// Check if index is in bounds
 	if inputNum < 0 || inputNum >= len(resp) {
 		errMsg := function + " - input number out of range: " + input
 		framework.AddToErrors(socketKey, errMsg)
-		return "", errors.New(errMsg)
+		return errMsg, errors.New(errMsg)
 	}
 
 	// Extract the single character
 	result := string(resp[inputNum])
 
+	// 'cast' result to 'bool' (still a string)
 	if result == "1" {
 		result = "true"
 	} else if result == "0" {
@@ -193,6 +200,7 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 	return result, nil
 }
 
+// Placeholder for not implemented functions
 func notImplemented(socketKey string, endpoint string, _ string, _ string, _ string) (string, error) {
 	function := "notImplemented"
 
@@ -201,7 +209,7 @@ func notImplemented(socketKey string, endpoint string, _ string, _ string, _ str
 	return "", errors.New(errMsg)
 }
 
-// Helper functions
+// Helper functions //
 
 func loginNegotiation(socketKey string) (success bool) {
 	function := "loginNegotiation"
