@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -151,17 +152,45 @@ func getVideoRouteDo(socketKey string, endpoint string, output string, _ string,
 	return resp, nil
 }
 
-func getInputStatusDo(socketKey string, endpoint string, _ string, _ string, _ string) (string, error) {
+func getInputStatusDo(socketKey string, endpoint string, input string, _ string, _ string) (string, error) {
 	function := "getInputStatusDo"
 
-	resp, err := deviceTypeDependantCommand(socketKey, "inputstatus", "", "", "")
+	resp, err := deviceTypeDependantCommand(socketKey, "inputstatus", input, "", "")
 	if err != nil {
 		errMsg := function + "- error getting input status: " + err.Error()
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
 
-	return resp, nil
+	// matrix will return string of 1 or 0 for all inputs it supports
+	// scaler will do the same but with "*" between inputs
+	resp = strings.ReplaceAll(resp, `*`, ``)
+
+	// get character at position specified by input
+	inputNum, err := strconv.Atoi(input)
+	if err != nil {
+		errMsg := function + " - invalid input number: " + input
+		framework.AddToErrors(socketKey, errMsg)
+		return "", errors.New(errMsg)
+	}
+
+	// Check if index is in bounds
+	if inputNum < 0 || inputNum >= len(resp) {
+		errMsg := function + " - input number out of range: " + input
+		framework.AddToErrors(socketKey, errMsg)
+		return "", errors.New(errMsg)
+	}
+
+	// Extract the single character
+	result := string(resp[inputNum])
+
+	if result == "1" {
+		result = "true"
+	} else if result == "0" {
+		result = "false"
+	}
+
+	return result, nil
 }
 
 func notImplemented(socketKey string, endpoint string, _ string, _ string, _ string) (string, error) {

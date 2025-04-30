@@ -78,8 +78,8 @@ func doDeviceSpecificGet(socketKey string, setting string, arg1 string, arg2 str
 	switch setting {
 	case "videoroute":
 		return endpointGet(socketKey, "videoroute", arg1, "", "") // arg1: output (if not matrix, use '1' for arg1)
-		//case "special2":
-		//	return getSpecial2(socketKey, arg1, arg2)
+	case "inputstatus":
+		return endpointGet(socketKey, "inputstatus", arg1, "", "") // arg1: input
 	}
 
 	// If we get here, we didn't recognize the setting.  Send an error back to the config writer who had a bad URL.
