@@ -153,7 +153,7 @@ func getVideoRouteDo(socketKey string, endpoint string, output string, _ string,
 	// some non-matrix devices have leading zeroes in the response, remove them.
 	// remember the response is wrapped in quotes
 	if len(resp) == 4 && resp[1] == '0' {
-		resp = resp[2:]
+		resp = `"` + resp[2:]
 	}
 	return resp, nil
 }
