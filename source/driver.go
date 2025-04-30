@@ -124,8 +124,8 @@ func getVideoRouteDo(socketKey string, endpoint string, output string, _ string,
 // Helper functions
 
 // function args are socketKey, endpoint, arg1, arg2, arg3
-var functionMap = map[string]func(string, string, string, string, string) (string, error){
-	"getVideoRoute": getVideoRouteDo,
+var getFunctionMap = map[string]func(string, string, string, string, string) (string, error){
+	"VideoRoute": getVideoRouteDo,
 }
 
 func loginNegotiation(socketKey string) (success bool) {
@@ -291,7 +291,7 @@ func endpointGet(socketKey string, endpoint string, arg1 string, arg2 string, ar
 	value := `"unknown"`
 	err := error(nil)
 
-	if fn, exists := functionMap[endpoint]; exists {
+	if fn, exists := getFunctionMap[endpoint]; exists {
 		value, err = fn(socketKey, endpoint, arg1, arg2, arg3)
 	} else {
 		errMsg := fmt.Sprintf(function+" - 7s5ce - no function found for endpoint: %s", endpoint)
