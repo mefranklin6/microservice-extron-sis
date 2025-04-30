@@ -102,6 +102,36 @@ var internalSetCmdMap = map[string]string{
 
 // MAIN FUNCTIONS
 
+// Maps get endpoints to get functions so we can call them dynamically.
+// Make sure all future endpoints are added here.
+// function args are socketKey, endpoint, arg1, arg2, arg3
+var getFunctionMap = map[string]func(string, string, string, string, string) (string, error){
+	"power":              notImplemented, // TODO
+	"volume":             notImplemented, // TODO
+	"videoroute":         getVideoRouteDo,
+	"audioandvideoroute": notImplemented, // TODO
+	"audioandvideomute":  notImplemented, // TODO
+	"inputstatus":        getInputStatusDo,
+	"occupancystatus":    notImplemented, // TODO
+	"matrixmute":         notImplemented, // TODO
+	"matrixvolume":       notImplemented, // TODO
+	"setstate":           notImplemented, // TODO
+
+}
+
+var setFunctionMap = map[string]func(string, string, string, string, string) (string, error){
+	"power":              notImplemented, // TODO
+	"volume":             notImplemented, // TODO
+	"videoroute":         notImplemented, // TODO
+	"audioandvideoroute": notImplemented, // TODO
+	"audioandvideomute":  notImplemented, // TODO
+	"matrixmute":         notImplemented, // TODO
+	"matrixvolume":       notImplemented, // TODO
+	"setstate":           notImplemented, // TODO
+	"triggerstate":       notImplemented, // TODO
+	"timedtriggerstate":  notImplemented, // TODO
+}
+
 // Get functions
 func getVideoRouteDo(socketKey string, endpoint string, output string, _ string, _ string) (string, error) {
 	function := "getVideoRouteDo"
@@ -121,12 +151,28 @@ func getVideoRouteDo(socketKey string, endpoint string, output string, _ string,
 	return resp, nil
 }
 
-// Helper functions
+func getInputStatusDo(socketKey string, endpoint string, _ string, _ string, _ string) (string, error) {
+	function := "getInputStatusDo"
 
-// function args are socketKey, endpoint, arg1, arg2, arg3
-var getFunctionMap = map[string]func(string, string, string, string, string) (string, error){
-	"videoroute": getVideoRouteDo,
+	resp, err := deviceTypeDependantCommand(socketKey, "inputstatus", "", "", "")
+	if err != nil {
+		errMsg := function + "- error getting input status: " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	return resp, nil
 }
+
+func notImplemented(socketKey string, endpoint string, _ string, _ string, _ string) (string, error) {
+	function := "notImplemented"
+
+	errMsg := fmt.Sprintf("%s - %s - endpoint '%s' is not implemented", function, socketKey, endpoint)
+	framework.AddToErrors(socketKey, errMsg)
+	return "", errors.New(errMsg)
+}
+
+// Helper functions
 
 func loginNegotiation(socketKey string) (success bool) {
 	function := "loginNegotiation"
