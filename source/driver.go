@@ -125,7 +125,7 @@ func getVideoRouteDo(socketKey string, endpoint string, output string, _ string,
 
 // function args are socketKey, endpoint, arg1, arg2, arg3
 var getFunctionMap = map[string]func(string, string, string, string, string) (string, error){
-	"VideoRoute": getVideoRouteDo,
+	"videoroute": getVideoRouteDo,
 }
 
 func loginNegotiation(socketKey string) (success bool) {
