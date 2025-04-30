@@ -262,7 +262,7 @@ func findDeviceType(socketKey string) (string, error) {
 	//	deviceType = "Collaboration Systems" //ex: ShareLink
 
 	case strings.Contains(resp, "matrix") && !strings.Contains(resp, "audio"):
-		deviceType = "Matrix Swicher"
+		deviceType = "Matrix Switcher"
 
 	case strings.Contains(resp, "scaling presentation switcher"):
 		deviceType = "Scaler" // IN 16xx series
