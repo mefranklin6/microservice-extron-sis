@@ -141,16 +141,29 @@ func findDeviceType(socketKey string) (string, error) {
 
 	resp = strings.ToLower(resp)
 
-	// not complete: add more device types as needed
+	// TODO: commented out items
 	switch {
-	case strings.Contains(resp, "matrix"):
-		deviceType = "Matrix"
+	case strings.Contains(resp, "dmp") || strings.Contains(resp, "digital audio"):
+		deviceType = "Audio Processor"
+
+	//case strings.Contains(resp, "TODO:"):
+	//	deviceType = "Collaboration Systems" //ex: ShareLink
+
+	case strings.Contains(resp, "matrix") && !strings.Contains(resp, "audio"):
+		deviceType = "Matrix Swicher"
+
 	case strings.Contains(resp, "scaling presentation switcher"):
 		deviceType = "Scaler" // IN 16xx series
+
 	case resp == "seemless presentation switcher":
 		deviceType = "Scaler" // IN 18xx series
-	case strings.Contains(resp, "dmp"):
-		deviceType = "DSP"
+
+	case resp == "streaming media processor":
+		deviceType = "Streaming Media" // ex: SMP3xx
+
+	//case strings.Contains(resp, "????"):
+	//	deviceType = "Switcher" // non-scaling switchers, often older or low-end models
+
 	default:
 		deviceType = "unknown"
 	}
