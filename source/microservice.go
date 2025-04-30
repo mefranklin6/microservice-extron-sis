@@ -68,7 +68,7 @@ var internalGetCmdMap = map[string]string{
 	"viewloopoutinput":        "\x1BLOUT\r",
 	"viewallvideoties":        "\x1B0*1*1VC\r", // matrix
 	"viewallaudioties":        "\x1B0*1*2VC\r", // matrix
-	"readvideooutputtie":      "%s%\r",         // arg1: output name, matrix
+	"readvideooutputtie":      "%s%%\r",        // arg1: output name, matrix
 	"readaudiooutputtie":      "%s$\r",         // arg1: output name, matrix
 	"viewmutestatus":          "%s*B\r",        // non-matrix
 	"viewoutputvideomutes":    "\x1BVM\r",      // matrix
