@@ -133,7 +133,7 @@ func getVideoRouteDo(socketKey string, output string) (string, error) {
 
 	cmdString := ""
 	switch deviceType {
-	case "Matrix":
+	case "Matrix Switcher":
 		cmdString = formatCommand(internalGetCmdMap["readvideooutputtie"], output, "", "")
 	case "Scaler":
 		cmdString = internalGetCmdMap["viewvideoinput"]
@@ -152,6 +152,11 @@ func getVideoRouteDo(socketKey string, output string) (string, error) {
 	}
 
 	framework.Log(fmt.Sprintf("%s - %s - response: %s", function, socketKey, resp))
+
+	// some non-matrix devices have leading zeroes in the response, remove them
+	if len(resp) == 2 && resp[0] == '0' {
+		resp = resp[1:]
+	}
 
 	return resp, nil
 }
