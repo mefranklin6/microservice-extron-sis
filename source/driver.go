@@ -47,16 +47,16 @@ var publicGetCmdEndpoints = map[string]string{
 
 var internalGetCmdMap = map[string]map[string]string{
 	"inputstatus": {
-		"matrix": "0LS\r",
-		"scaler": "\x1B0LS\r",
+		"Matrix Switcher": "0LS\r",
+		"Scaler":          "\x1B0LS\r",
 	},
 	"videoroute": {
-		"matrix": "%s%%\r", // arg1: output name
-		"scaler": "&\r",
+		"Matrix Switcher": "%s%%\r", // arg1: output name
+		"Scaler":          "&\r",
 	},
 	"audioroute": {
-		"matrix": "%s$\r", // arg1: output name
-		"scaler": "$\r",
+		"Matrix Switcher": "%s$\r", // arg1: output name
+		"Scaler":          "$\r",
 	},
 
 	//"viewvideoinput":          "&\r",       // non-matrix
@@ -316,7 +316,7 @@ func deviceTypeDependantCommand(socketKey string, endpoint string, arg1 string, 
 	cmdString = formatCommand(internalGetCmdMap[endpoint][deviceType], arg1, arg2, arg3)
 
 	if cmdString == "" {
-		errMsg := fmt.Sprintf(function+" - 7s5ce - no command found for device type: %s", deviceType)
+		errMsg := fmt.Sprintf(function+" - 8deoi - no command found for device type: %s", deviceType)
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
