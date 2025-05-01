@@ -243,10 +243,10 @@ func setVideoRouteDo(socketKey string, endpoint string, output string, input str
 	// Any errors will have been formatted in formatDeviceErrMessage
 
 	switch {
+	case strings.Contains(resp, "error"):
+		return resp, errors.New(resp) // device returned an error code
 	case strings.Contains(resp, "In") && strings.Contains(resp, input):
 		return "ok", nil
-	case strings.Contains(resp, "E") || strings.Contains(resp, "error"):
-		return resp, errors.New(resp) // device returned an error code
 	default:
 		return "unknown response: " + resp, nil
 	}
