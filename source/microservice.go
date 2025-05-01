@@ -41,12 +41,14 @@ func doDeviceSpecificSet(socketKey string, setting string, arg1 string, arg2 str
 	// Add a case statement for commands that require special processing.
 	// These calls can use 0, 1, or 2 arguments.
 
-	//switch setting {
-	//case "special1":
-	//	return setSpecial1(socketKey, arg1, arg2)
-	//case "special2":
-	//	return setSpecial2(socketKey, arg1, arg2)
-	//}
+	switch setting {
+	case "videoroute":
+		return specialEndpointSet(socketKey, "videoroute", arg1, arg2, "") // arg1: output, arg2: input
+		//case "special1":
+		//	return setSpecial1(socketKey, arg1, arg2)
+		//case "special2":
+		//	return setSpecial2(socketKey, arg1, arg2)
+	}
 
 	// If we get here, we didn't recognize the setting.  Send an error back to the config writer who had a bad URL.
 	errMsg := function + " - unrecognized setting in URI: " + setting

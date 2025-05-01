@@ -85,23 +85,27 @@ var internalGetCmdMap = map[string]map[string]string{
 }
 
 // TODO
-var internalSetCmdMap = map[string]string{
-	"globalvideomute":        "1*B\r",
-	"globalvideoandsyncmute": "2*B\r",
-	"globalvideounmute":      "0*B\r",
+var internalSetCmdMap = map[string]map[string]string{
+	"videoroute": {
+		"Matrix Switcher": "%s*%s%%\r", // arg1: input name | arg2: output name
+		"Scaler":          "%s&\r",     // arg1: input name
+	},
 
-	"audioandvideoroute": "%s!\r",        // arg1: input name, non-matrix
-	"videoroute":         "%s&\r",        // arg1: input name, non-matrix
-	"audioroute":         "%s$\r",        // arg1: input name, non-matrix
-	"setloopoutinput":    "\x1B%sLOUT\r", // arg1: input name
+	//"globalvideomute":        "1*B\r",
+	//"globalvideoandsyncmute": "2*B\r",
+	//"globalvideounmute":      "0*B\r",
 
-	"tieaudioandvideoroute": "%s*%s!\r", // arg1: input name | arg2: output name, matrix
-	"tievideoroute":         "%s*%s%\r", // arg1: input name | arg2: output name, matrix
-	"tieaudioroute":         "%s*%s$\r", // arg1: input name | arg2: output name, matrix
+	//"audioandvideoroute": "%s!\r",        // arg1: input name, non-matrix
+	//"videoroute":         "%s&\r",        // arg1: input name, non-matrix
+	//"audioroute":         "%s$\r",        // arg1: input name, non-matrix
+	//"setloopoutinput":    "\x1B%sLOUT\r", // arg1: input name
 
-	"mutevideooutput":   "%s*1B\r", // arg1: output name
-	"mutevideoandsync":  "%s*2B\r", // arg1: output name
-	"unmutevideooutput": "%s*0B\r", // arg1: output name
+	//"tieaudioandvideoroute": "%s*%s!\r", // arg1: input name | arg2: output name, matrix
+	//"tieaudioroute":         "%s*%s$\r", // arg1: input name | arg2: output name, matrix
+
+	//"mutevideooutput":   "%s*1B\r", // arg1: output name
+	//"mutevideoandsync":  "%s*2B\r", // arg1: output name
+	//"unmutevideooutput": "%s*0B\r", // arg1: output name
 }
 
 // Maps get endpoints to get functions so we can call them dynamically.
@@ -127,7 +131,7 @@ var getFunctionsMap = map[string]func(string, string, string, string, string) (s
 var setFunctionsMap = map[string]func(string, string, string, string, string) (string, error){
 	"power":              notImplemented, // TODO
 	"volume":             notImplemented, // TODO
-	"videoroute":         notImplemented, // TODO
+	"videoroute":         setVideoRouteDo,
 	"audioandvideoroute": notImplemented, // TODO
 	"audioandvideomute":  notImplemented, // TODO
 	"matrixmute":         notImplemented, // TODO
@@ -198,6 +202,30 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 	}
 
 	return result, nil
+}
+
+// Set functions //
+
+func setVideoRouteDo(socketKey string, endpoint string, output string, input string, _ string) (string, error) {
+	function := "setVideoRouteDo"
+
+	resp, err := deviceTypeDependantCommand(socketKey, "videoroute", input, output, "")
+	if err != nil {
+		errMsg := function + "- error setting video route: " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+	// Good response example is "Out4 In6 Vid" for a matrix switcher "In6 RGB" for scaler
+	// Any errors will have been formatted in formatDeviceErrMessage
+
+	switch {
+	case strings.Contains(resp, "In") && strings.Contains(resp, input):
+		return "ok", nil
+	case strings.Contains(resp, "E") || strings.Contains(resp, "error"):
+		return resp, errors.New(resp) // device returned an error code
+	default:
+		return "unknown response: " + resp, nil
+	}
 }
 
 // Helper functions //
@@ -285,6 +313,7 @@ func ensureActiveConnection(socketKey string) error {
 func formatDeviceErrMessage(socketKey string, resp string) string {
 	function := "formatDeviceErrMessage"
 
+	// make sure to always include "error" in the response if there's an error
 	if errorMessage, exists := errorResponsesMap[resp]; exists { // known error
 		errMsg := fmt.Sprintf("%s - I9WuD - device returned error: %s: %s", function, resp, errorMessage)
 		return errMsg
