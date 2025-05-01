@@ -379,6 +379,9 @@ func formatCommand(command string, arg1 string, arg2 string, arg3 string) string
 
 	var cmd string
 
+	framework.Log(function + " - Formatting command: " + command)
+	framework.Log(function + " - Arguments: " + arg1 + ", " + arg2 + ", " + arg3)
+
 	// Count the number of non-empty arguments
 	verbCount := strings.Count(command, "%s")
 
