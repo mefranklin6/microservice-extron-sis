@@ -456,7 +456,7 @@ func deviceTypeDependantCommand(socketKey string, endpoint string, method string
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
-	formatCommand(cmdMap[endpoint][deviceType], arg1, arg2, arg3)
+	cmdString = formatCommand(cmdMap[endpoint][deviceType], arg1, arg2, arg3)
 
 	if cmdString == "" {
 		errMsg := fmt.Sprintf(function+" - 8deoi - no command found for device type: %s", deviceType)
