@@ -352,7 +352,7 @@ func formatCommand(command string, arg1 string, arg2 string, arg3 string) string
 	function := "formatCommand"
 
 	var cmd string
-	switch strings.Count(command, "%s") {
+	switch countFormatVerbs(command) {
 	case 3:
 		cmd = fmt.Sprintf(command, arg1, arg2, arg3)
 	case 2:
@@ -365,6 +365,23 @@ func formatCommand(command string, arg1 string, arg2 string, arg3 string) string
 
 	framework.Log(function + " - Formatted command: " + cmd)
 	return cmd
+}
+
+// only counts format verbs and ignores escaped percent signs (%%)
+func countFormatVerbs(s string) int {
+	count := 0
+	for i := 0; i < len(s); i++ {
+		if s[i] == '%' && i+1 < len(s) {
+			// Skip escaped percent signs (%%), only count %s
+			if s[i+1] == '%' {
+				i++ // Skip next character
+			} else if s[i+1] == 's' {
+				count++
+				i++ // Skip 's' character
+			}
+		}
+	}
+	return count
 }
 
 func findDeviceType(socketKey string) (string, error) {
