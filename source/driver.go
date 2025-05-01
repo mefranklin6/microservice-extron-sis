@@ -24,6 +24,8 @@ var errorResponsesMap = map[string]string{
 	"E28": "Bad name or file not found",
 }
 
+var deviceTypes = make(map[string]string) // socketKey -> deviceType
+
 // These can be called as endpoints but may not be part of OpenAV spec
 var publicGetCmdEndpoints = map[string]string{
 	"firmwareversion":      "Q\r", // is universal across all products

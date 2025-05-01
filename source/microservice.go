@@ -6,8 +6,6 @@ import (
 	"github.com/mefranklin6/microservice-framework/framework" // Change after PR#3 for Dartmouth
 )
 
-var deviceTypes = make(map[string]string) // socketKey -> deviceType
-
 func setFrameworkGlobals() {
 	// globals that change modes in the microservice framework:
 	framework.MicroserviceName = "OpenAV Extron SIS MicroService"
