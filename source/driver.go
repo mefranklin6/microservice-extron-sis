@@ -454,7 +454,7 @@ func deviceTypeDependantCommand(socketKey string, endpoint string, method string
 	} else {
 		errMsg := fmt.Sprintf(function+" - 8deoi - invalid method: %s", method)
 		framework.AddToErrors(socketKey, errMsg)
-		return
+		return errMsg, errors.New(errMsg)
 	}
 	formatCommand(cmdMap[endpoint][deviceType], arg1, arg2, arg3)
 
