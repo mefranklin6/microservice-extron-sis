@@ -61,8 +61,9 @@ var publicSetCmdEndpoints = map[string]string{
 // OpenAV spec get endpoint names with mappings for different device types
 var internalGetCmdMap = map[string]map[string]string{
 	"inputstatus": {
-		"Matrix Switcher": "0LS\r",
-		"Scaler":          "\x1B0LS\r",
+		"Matrix Switcher":        "0LS\r",
+		"Scaler":                 "\x1B0LS\r",
+		"Distribution Amplifier": "\x1BLS\r",
 	},
 	"videoroute": {
 		"Matrix Switcher": "%s%%\r", // arg1: output name
@@ -71,6 +72,10 @@ var internalGetCmdMap = map[string]map[string]string{
 	"audioroute": {
 		"Matrix Switcher": "%s$\r", // arg1: output name
 		"Scaler":          "$\r",
+	},
+	"audiomute": {
+		"Matrix Switcher": "%s*B\r", // arg1: output name
+		"Scaler":          "*B\r",
 	},
 
 	//"viewvideoinput":          "&\r",       // non-matrix
@@ -176,6 +181,23 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 
 	// matrix will return string of 1 or 0 for all inputs it supports
 	// scaler will do the same but with "*" between inputs
+	// DA will return "input*loopout output1 output2..."   ex: "1*0 0 1 0 0"
+
+	// handle Distribution Amplifier (one input only)
+	if strings.Count(resp, "*") == 1 && len(resp) > 1 && (resp[1] == '1' || resp[1] == '0') {
+		resp = `"` + resp[1:]
+		if resp == "1" {
+			return "true", nil
+		} else if resp == "0" {
+			return "false", nil
+		} else {
+			errMsg := function + " - invalid response for DA input status: " + resp
+			framework.AddToErrors(socketKey, errMsg)
+			return errMsg, errors.New(errMsg)
+		}
+	}
+
+	// Remove the matrix formatting
 	resp = strings.ReplaceAll(resp, `*`, ``)
 
 	// cast the input string to an integer
@@ -389,6 +411,9 @@ func findDeviceType(socketKey string) (string, error) {
 
 	//case strings.Contains(resp, "????"):
 	//	deviceType = "Switcher" // non-scaling switchers, often older or low-end models
+
+	case strings.Contains(resp, "distribution amplifier"):
+		deviceType = "Distribution Amplifier"
 
 	default:
 		deviceType = "unknown"
