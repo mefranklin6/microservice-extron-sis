@@ -449,7 +449,7 @@ func deviceTypeDependantCommand(socketKey string, endpoint string, method string
 	var cmdMap map[string]map[string]string
 	if method == "GET" {
 		cmdMap = internalGetCmdMap
-	} else if method == "PUT" {
+	} else if method == "SET" {
 		cmdMap = internalSetCmdMap
 	} else {
 		errMsg := fmt.Sprintf(function+" - 8deoi - invalid method: %s", method)
