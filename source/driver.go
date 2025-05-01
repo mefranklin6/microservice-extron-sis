@@ -234,7 +234,7 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 
 // Set functions //
 
-func setVideoRouteDo(socketKey string, endpoint string, output string, input string, _ string) (string, error) {
+func setVideoRouteDo(socketKey string, endpoint string, input string, output string, _ string) (string, error) {
 	function := "setVideoRouteDo"
 
 	resp, err := deviceTypeDependantCommand(socketKey, "videoroute", "SET", input, output, "")
@@ -256,7 +256,7 @@ func setVideoRouteDo(socketKey string, endpoint string, output string, input str
 	}
 }
 
-func setAudioAndVideoRoute(socketKey string, endpoint string, output string, input string, _ string) (string, error) {
+func setAudioAndVideoRoute(socketKey string, endpoint string, input string, output string, _ string) (string, error) {
 	function := "setAudioAndVideoRoute"
 
 	resp, err := deviceTypeDependantCommand(socketKey, "audioandvideoroute", "SET", input, output, "")
