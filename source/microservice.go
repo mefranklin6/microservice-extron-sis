@@ -42,6 +42,8 @@ func doDeviceSpecificSet(socketKey string, setting string, arg1 string, arg2 str
 	switch setting {
 	case "videoroute":
 		return specialEndpointSet(socketKey, "videoroute", arg1, arg2, "") // arg1: output, arg2: input
+	case "audioandvideoroute":
+		return specialEndpointSet(socketKey, "audioandvideoroute", arg1, arg2, "") // arg1: output, arg2: input
 		//case "special1":
 		//	return setSpecial1(socketKey, arg1, arg2)
 		//case "special2":

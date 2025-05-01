@@ -97,6 +97,10 @@ var internalSetCmdMap = map[string]map[string]string{
 		"Matrix Switcher": "%s*%s%%\r", // arg1: input name | arg2: output name
 		"Scaler":          "%s&\r",     // arg1: input name
 	},
+	"audioandvideoroute": {
+		"Matrix Switcher": "%s*%s!\r", // arg1: input name | arg2: output name
+		"Scaler":          "%s!\r",    // arg1: input name
+	},
 
 	//"globalvideomute":        "1*B\r",
 	//"globalvideoandsyncmute": "2*B\r",
@@ -139,13 +143,13 @@ var setFunctionsMap = map[string]func(string, string, string, string, string) (s
 	"power":              notImplemented, // TODO
 	"volume":             notImplemented, // TODO
 	"videoroute":         setVideoRouteDo,
-	"audioandvideoroute": notImplemented, // TODO
-	"audioandvideomute":  notImplemented, // TODO
-	"matrixmute":         notImplemented, // TODO
-	"matrixvolume":       notImplemented, // TODO
-	"setstate":           notImplemented, // TODO
-	"triggerstate":       notImplemented, // TODO
-	"timedtriggerstate":  notImplemented, // TODO
+	"audioandvideoroute": setAudioAndVideoRoute, // TODO
+	"audioandvideomute":  notImplemented,        // TODO
+	"matrixmute":         notImplemented,        // TODO
+	"matrixvolume":       notImplemented,        // TODO
+	"setstate":           notImplemented,        // TODO
+	"triggerstate":       notImplemented,        // TODO
+	"timedtriggerstate":  notImplemented,        // TODO
 }
 
 // Main Functions //
@@ -246,6 +250,28 @@ func setVideoRouteDo(socketKey string, endpoint string, output string, input str
 	case strings.Contains(resp, "error"):
 		return resp, errors.New(resp) // device returned an error code
 	case strings.Contains(resp, "In") && strings.Contains(resp, input):
+		return "ok", nil
+	default:
+		return "unknown response: " + resp, nil
+	}
+}
+
+func setAudioAndVideoRoute(socketKey string, endpoint string, output string, input string, _ string) (string, error) {
+	function := "setAudioAndVideoRoute"
+
+	resp, err := deviceTypeDependantCommand(socketKey, "audioandvideoroute", "SET", input, output, "")
+	if err != nil {
+		errMsg := function + "- error setting audio and video route: " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	// Matrix good response: "Out4 In2 All"
+	// Scaler good response: "In02 All"
+	switch {
+	case strings.Contains(resp, "error"):
+		return resp, errors.New(resp) // device returned an error code
+	case strings.Contains(resp, "In") && strings.Contains(resp, input) && strings.Contains(resp, "All"):
 		return "ok", nil
 	default:
 		return "unknown response: " + resp, nil
@@ -354,14 +380,9 @@ func formatCommand(command string, arg1 string, arg2 string, arg3 string) string
 	var cmd string
 
 	// Count the number of non-empty arguments
-	args := []string{arg1, arg2, arg3}
-	argCount := 0
-	for _, arg := range args {
-		if arg != "" {
-			argCount++
-		}
-	}
-	switch argCount {
+	verbCount := strings.Count(command, "%s")
+
+	switch verbCount {
 	case 3:
 		cmd = fmt.Sprintf(command, arg1, arg2, arg3)
 	case 2:
