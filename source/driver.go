@@ -154,7 +154,7 @@ var setFunctionsMap = map[string]func(string, string, string, string, string) (s
 func getVideoRouteDo(socketKey string, endpoint string, output string, _ string, _ string) (string, error) {
 	function := "getVideoRouteDo"
 
-	resp, err := deviceTypeDependantCommand(socketKey, "videoroute", output, "", "")
+	resp, err := deviceTypeDependantCommand(socketKey, "videoroute", "GET", output, "", "")
 	if err != nil {
 		errMsg := function + "- error getting video route: " + err.Error()
 		framework.AddToErrors(socketKey, errMsg)
@@ -172,7 +172,7 @@ func getVideoRouteDo(socketKey string, endpoint string, output string, _ string,
 func getInputStatusDo(socketKey string, endpoint string, input string, _ string, _ string) (string, error) {
 	function := "getInputStatusDo"
 
-	resp, err := deviceTypeDependantCommand(socketKey, "inputstatus", input, "", "")
+	resp, err := deviceTypeDependantCommand(socketKey, "inputstatus", "GET", input, "", "")
 	if err != nil {
 		errMsg := function + "- error getting input status: " + err.Error()
 		framework.AddToErrors(socketKey, errMsg)
@@ -233,7 +233,7 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 func setVideoRouteDo(socketKey string, endpoint string, output string, input string, _ string) (string, error) {
 	function := "setVideoRouteDo"
 
-	resp, err := deviceTypeDependantCommand(socketKey, "videoroute", input, output, "")
+	resp, err := deviceTypeDependantCommand(socketKey, "videoroute", "SET", input, output, "")
 	if err != nil {
 		errMsg := function + "- error setting video route: " + err.Error()
 		framework.AddToErrors(socketKey, errMsg)
@@ -435,7 +435,7 @@ func findDeviceType(socketKey string) (string, error) {
 	return deviceType, nil
 }
 
-func deviceTypeDependantCommand(socketKey string, endpoint string, arg1 string, arg2 string, arg3 string, method string) (string, error) {
+func deviceTypeDependantCommand(socketKey string, endpoint string, method string, arg1 string, arg2 string, arg3 string) (string, error) {
 	function := "deviceTypeDependantCommand"
 
 	deviceType, err := findDeviceType(socketKey)
@@ -454,7 +454,7 @@ func deviceTypeDependantCommand(socketKey string, endpoint string, arg1 string, 
 	} else {
 		errMsg := fmt.Sprintf(function+" - 8deoi - invalid method: %s", method)
 		framework.AddToErrors(socketKey, errMsg)
-		return errMsg, errors.New(errMsg)
+		return
 	}
 	formatCommand(cmdMap[endpoint][deviceType], arg1, arg2, arg3)
 
