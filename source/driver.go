@@ -435,7 +435,7 @@ func findDeviceType(socketKey string) (string, error) {
 	return deviceType, nil
 }
 
-func deviceTypeDependantCommand(socketKey string, endpoint string, arg1 string, arg2 string, arg3 string) (string, error) {
+func deviceTypeDependantCommand(socketKey string, endpoint string, arg1 string, arg2 string, arg3 string, method string) (string, error) {
 	function := "deviceTypeDependantCommand"
 
 	deviceType, err := findDeviceType(socketKey)
@@ -446,7 +446,17 @@ func deviceTypeDependantCommand(socketKey string, endpoint string, arg1 string, 
 	}
 
 	cmdString := ""
-	cmdString = formatCommand(internalGetCmdMap[endpoint][deviceType], arg1, arg2, arg3)
+	var cmdMap map[string]map[string]string
+	if method == "GET" {
+		cmdMap = internalGetCmdMap
+	} else if method == "PUT" {
+		cmdMap = internalSetCmdMap
+	} else {
+		errMsg := fmt.Sprintf(function+" - 8deoi - invalid method: %s", method)
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+	formatCommand(cmdMap[endpoint][deviceType], arg1, arg2, arg3)
 
 	if cmdString == "" {
 		errMsg := fmt.Sprintf(function+" - 8deoi - no command found for device type: %s", deviceType)
