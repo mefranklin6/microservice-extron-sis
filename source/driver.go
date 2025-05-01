@@ -107,7 +107,7 @@ var internalSetCmdMap = map[string]string{
 // Maps get endpoints to get functions so we can call them dynamically.
 // Make sure all future endpoints are added here.
 // function args are socketKey, endpoint, arg1, arg2, arg3
-var getFunctionMap = map[string]func(string, string, string, string, string) (string, error){
+var getFunctionsMap = map[string]func(string, string, string, string, string) (string, error){
 	"power":              notImplemented, // TODO
 	"volume":             notImplemented, // TODO
 	"videoroute":         getVideoRouteDo,
@@ -124,7 +124,7 @@ var getFunctionMap = map[string]func(string, string, string, string, string) (st
 // Maps set endpoints to set functions so we can call them dynamically.
 // Make sure all future endpoints are added here.
 // function args are socketKey, endpoint, arg1, arg2, arg3
-var setFunctionMap = map[string]func(string, string, string, string, string) (string, error){
+var setFunctionsMap = map[string]func(string, string, string, string, string) (string, error){
 	"power":              notImplemented, // TODO
 	"volume":             notImplemented, // TODO
 	"videoroute":         notImplemented, // TODO
@@ -172,7 +172,7 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 	// scaler will do the same but with "*" between inputs
 	resp = strings.ReplaceAll(resp, `*`, ``)
 
-	// cast the input art to an integer
+	// cast the input string to an integer
 	inputNum, err := strconv.Atoi(input)
 	if err != nil {
 		errMsg := function + " - invalid input number: " + input
@@ -200,6 +200,8 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 	return result, nil
 }
 
+// Helper functions //
+
 // Placeholder for not implemented functions
 func notImplemented(socketKey string, endpoint string, _ string, _ string, _ string) (string, error) {
 	function := "notImplemented"
@@ -208,8 +210,6 @@ func notImplemented(socketKey string, endpoint string, _ string, _ string, _ str
 	framework.AddToErrors(socketKey, errMsg)
 	return "", errors.New(errMsg)
 }
-
-// Helper functions //
 
 func loginNegotiation(socketKey string) (success bool) {
 	function := "loginNegotiation"
@@ -368,23 +368,6 @@ func findDeviceType(socketKey string) (string, error) {
 	return deviceType, nil
 }
 
-func endpointGet(socketKey string, endpoint string, arg1 string, arg2 string, arg3 string) (string, error) {
-	function := "endpointGet"
-
-	value := `"unknown"`
-	err := error(nil)
-
-	if fn, exists := getFunctionMap[endpoint]; exists {
-		value, err = fn(socketKey, endpoint, arg1, arg2, arg3)
-	} else {
-		errMsg := fmt.Sprintf(function+" - 7s5ce - no function found for endpoint: %s", endpoint)
-		framework.AddToErrors(socketKey, errMsg)
-		return errMsg, errors.New(errMsg)
-	}
-
-	return value, err
-}
-
 func deviceTypeDependantCommand(socketKey string, endpoint string, arg1 string, arg2 string, arg3 string) (string, error) {
 	function := "deviceTypeDependantCommand"
 
@@ -411,6 +394,42 @@ func deviceTypeDependantCommand(socketKey string, endpoint string, arg1 string, 
 
 	framework.Log(fmt.Sprintf("%s - %s - %s response: %s", function, socketKey, endpoint, resp))
 	return resp, nil
+}
+
+// entry point for special endpoints that require their own get function
+func specialEndpointGet(socketKey string, endpoint string, arg1 string, arg2 string, arg3 string) (string, error) {
+	function := "specialEndpointGet"
+
+	value := `"unknown"`
+	err := error(nil)
+
+	if fn, exists := getFunctionsMap[endpoint]; exists {
+		value, err = fn(socketKey, endpoint, arg1, arg2, arg3)
+	} else {
+		errMsg := fmt.Sprintf(function+" - 7s5ce - no special get function found for endpoint: %s", endpoint)
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	return value, err
+}
+
+// entry point for special endpoints that require their own set function
+func specialEndpointSet(socketKey string, endpoint string, arg1 string, arg2 string, arg3 string) (string, error) {
+	function := "specialEndpointSet"
+
+	value := `"unknown"`
+	err := error(nil)
+
+	if fn, exists := setFunctionsMap[endpoint]; exists {
+		value, err = fn(socketKey, endpoint, arg1, arg2, arg3)
+	} else {
+		errMsg := fmt.Sprintf(function+" - kh6na - no special set function found for endpoint: %s", endpoint)
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	return value, err
 }
 
 func sendBasicCommand(socketKey string, cmdString string) (string, error) {
