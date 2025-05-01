@@ -371,6 +371,7 @@ func findDeviceType(socketKey string) (string, error) {
 	function := "findDeviceType"
 
 	if deviceType, exists := deviceTypes[socketKey]; exists {
+		framework.Log(fmt.Sprintf("%s - %s - Device type found in cache: %s", function, socketKey, deviceType))
 		return deviceType, nil // cache hit
 	}
 
@@ -420,6 +421,7 @@ func findDeviceType(socketKey string) (string, error) {
 	}
 
 	deviceTypes[socketKey] = deviceType
+	framework.Log(fmt.Sprintf("%s - %s - Device type determined: %s", function, socketKey, deviceType))
 
 	return deviceType, nil
 }
