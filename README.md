@@ -18,7 +18,7 @@ Not affliated with Extron.  SIS and Simple Instruction Set are copyrights of Ext
 
 Endpoints follow the OpenAV Unified Endpoint Definitions file.
 
-#### 1. Add device specific commands to `internalGetCmdMap` or `internalSetCmdMap` following the nested structure of
+#### 1. In `src/driver.go` Add device specific commands to `internalGetCmdMap` or `internalSetCmdMap` following the nested structure of
 
 ```json
 [
@@ -45,7 +45,7 @@ Currently the valid device types are:
 
 #### 2. Make your function under `// Get Functions //` or `// Set Functions //` in `driver.go`
 
-Function name : get or set + endpoint name + Do
+Function name conventions: "get or set" + "endpoint name" + "Do"
 
 ```go
 func getSomethingDo(socketKey string, endpoint string, arg1 string, arg2 string, arg3 string) (string, error) {
@@ -95,4 +95,5 @@ return either `specialEndpointGet` or `specialEndpointSet` with
 
 #### 4. Test on real devices, as much as practical
 
+Build and run the docker image to run commands against it
 Writing test scripts is encouraged.
