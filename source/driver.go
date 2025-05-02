@@ -69,10 +69,10 @@ var internalGetCmdMap = map[string]map[string]string{
 		"Matrix Switcher": "%s%%\r", // arg1: output name
 		"Scaler":          "&\r",
 	},
-	"audioroute": {
-		"Matrix Switcher": "%s$\r", // arg1: output name
-		"Scaler":          "$\r",
-	},
+	//"audioroute": {
+	//	"Matrix Switcher": "%s$\r", // arg1: output name
+	//	"Scaler":          "$\r",
+	//},
 	"audiomute": {
 		"Matrix Switcher": "%s*B\r", // arg1: output name
 		"Scaler":          "*B\r",
@@ -127,6 +127,9 @@ var getFunctionsMap = map[string]func(string, string, string, string, string) (s
 	"volume":             notImplemented, // TODO
 	"videoroute":         getVideoRouteDo,
 	"audioandvideoroute": notImplemented, // TODO
+	"audiomute":          notImplemented, // TODO
+	"videomute":          notImplemented, // TODO
+	"videosyncmure":      notImplemented, // TODO
 	"audioandvideomute":  notImplemented, // TODO
 	"inputstatus":        getInputStatusDo,
 	"occupancystatus":    notImplemented, // TODO
@@ -144,6 +147,9 @@ var setFunctionsMap = map[string]func(string, string, string, string, string) (s
 	"volume":             notImplemented, // TODO
 	"videoroute":         setVideoRouteDo,
 	"audioandvideoroute": setAudioAndVideoRoute, // TODO
+	"audiomute":          notImplemented,        // TODO
+	"videomute":          notImplemented,        // TODO
+	"videosyncmute":      notImplemented,        // TODO
 	"audioandvideomute":  notImplemented,        // TODO
 	"matrixmute":         notImplemented,        // TODO
 	"matrixvolume":       notImplemented,        // TODO
@@ -289,6 +295,7 @@ func notImplemented(socketKey string, endpoint string, _ string, _ string, _ str
 	return "", errors.New(errMsg)
 }
 
+// Internal
 func loginNegotiation(socketKey string) (success bool) {
 	function := "loginNegotiation"
 
@@ -339,7 +346,7 @@ func loginNegotiation(socketKey string) (success bool) {
 	return false
 }
 
-// Call this function before trying to write to the socket
+// Internal function that's called before writing to the socket
 func ensureActiveConnection(socketKey string) error {
 	function := "ensureActiveConnection"
 
@@ -359,7 +366,7 @@ func ensureActiveConnection(socketKey string) error {
 	return nil // Connection map already in framework
 }
 
-// Checks if the device returned an error code.  If it did, return a formatted error message.
+// Internal: Checks if the device returned an error code.  If it did, return a formatted error message.
 func formatDeviceErrMessage(socketKey string, resp string) string {
 	function := "formatDeviceErrMessage"
 
@@ -374,6 +381,7 @@ func formatDeviceErrMessage(socketKey string, resp string) string {
 	return ""
 }
 
+// Internal: Formats the command string with the provided arguments.
 func formatCommand(command string, arg1 string, arg2 string, arg3 string) string {
 	function := "formatCommand"
 
@@ -400,6 +408,7 @@ func formatCommand(command string, arg1 string, arg2 string, arg3 string) string
 	return cmd
 }
 
+// Internal: returns the device type from a package-level cache or queries the device.
 func findDeviceType(socketKey string) (string, error) {
 	function := "findDeviceType"
 
@@ -459,6 +468,7 @@ func findDeviceType(socketKey string) (string, error) {
 	return deviceType, nil
 }
 
+// Main function that handles device type dependent commands
 func deviceTypeDependantCommand(socketKey string, endpoint string, method string, arg1 string, arg2 string, arg3 string) (string, error) {
 	function := "deviceTypeDependantCommand"
 
@@ -533,6 +543,7 @@ func specialEndpointSet(socketKey string, endpoint string, arg1 string, arg2 str
 	return value, err
 }
 
+// Lower level main send command.
 func sendBasicCommand(socketKey string, cmdString string) (string, error) {
 	function := "sendBasicCommand"
 
@@ -559,6 +570,7 @@ func sendBasicCommand(socketKey string, cmdString string) (string, error) {
 	return value, err
 }
 
+// Internal
 func sendBasicCommandDo(socketKey string, cmdString string) (string, error) {
 	function := "sendBasicCommandDo"
 
