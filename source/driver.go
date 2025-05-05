@@ -15,7 +15,7 @@ import (
 var errorResponsesMap = map[string]string{
 	"E10": "Unrecognized command",
 	"E12": "Invalid port number",
-	"E13": "Invalid paramater (number is out of range)",
+	"E13": "Invalid parameter (number is out of range)",
 	"E14": "Not valid for this configuration",
 	"E17": "Invalid command for signal type",
 	"E18": "System timed out",
@@ -77,6 +77,12 @@ var internalGetCmdMap = map[string]map[string]string{
 		"Matrix Switcher": "%s*B\r", // arg1: output name
 		"Scaler":          "*B\r",
 	},
+	"videomute": {
+		"Matrix Switcher":        "\x1BVM\r",
+		"Scaler":                 "B\r",
+		"Switcher":               "B\r",
+		"Distribution Amplifier": "B\r",
+	},
 
 	//"viewvideoinput":          "&\r",       // non-matrix
 	//"viewcurrentinput":        "!\r",       // non-matrix
@@ -128,15 +134,13 @@ var getFunctionsMap = map[string]func(string, string, string, string, string) (s
 	"videoroute":         getVideoRouteDo,
 	"audioandvideoroute": notImplemented, // TODO
 	"audiomute":          notImplemented, // TODO
-	"videomute":          notImplemented, // TODO
-	"videosyncmure":      notImplemented, // TODO
+	"videomute":          getVideoMuteDo,
 	"audioandvideomute":  notImplemented, // TODO
 	"inputstatus":        getInputStatusDo,
 	"occupancystatus":    notImplemented, // TODO
 	"matrixmute":         notImplemented, // TODO
 	"matrixvolume":       notImplemented, // TODO
 	"setstate":           notImplemented, // TODO
-
 }
 
 // Maps set endpoints to set functions so we can call them dynamically.
@@ -238,6 +242,150 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 	return result, nil
 }
 
+func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, _ string) (string, error) {
+	function := "getVideoMuteDo"
+
+	resp, err := deviceTypeDependantCommand(socketKey, "videomute", "GET", "", "", "")
+	if err != nil {
+		errMsg := function + "- error getting video mute status: " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	// all return strings contain "0" (not muted), "1" (muted with sync) or 2 (sync mute) for each output
+
+	// DA returns string with single space between the characters.  First character is input.
+	// Matrix with "A" or "B" ex CP84: "0 0 0 0 0 0" which is 1,2,3A,3B,4A,4B
+	// Scaler with loopout (IN 1808) : "0 0 0", which is 1A,1B,LoopOut
+	// Scaler with mirrored but individually controlled outs (IN 1804) : "0 0"
+	// Scaler (IN 16xx) with standard mirrored outputs, just 0,1, or 2 (sync mute)
+
+	resp = strings.ReplaceAll(resp, " ", "")
+
+	deviceType := deviceTypes[socketKey]
+
+	// Simple device, only one character reply
+	// Could be IN 16xx or a switcher
+	if resp == "0" {
+		return "false", nil
+	} else if resp == "1" {
+		return "true", nil
+	} else if resp == "2" { // sync mute
+		return "true", nil
+	}
+
+	// Query is for loop out, could be IN1808
+	if output == "LoopOut" {
+		framework.Log(fmt.Sprintf("%s - %s - LoopOut response: %s", function, socketKey, resp))
+		result := string(resp[2])
+		switch result {
+		case "0":
+			return "false", nil
+		case "1":
+			return "true", nil
+		case "2":
+			return "true", nil
+		default:
+			errMsg := function + " - invalid loopout response: " + resp
+			framework.AddToErrors(socketKey, errMsg)
+			return errMsg, errors.New(errMsg)
+		}
+	}
+
+	// Maps: {Input Name : String index of where to find the output in resp}
+	// Note: So far these are all just unique enough, ex: only the 108 has 6A and seems 3B is always mapped to 4.
+	// ...this may change in the future as more devices are added and may require a re-design.
+
+	var crossPoint84Map = map[string]int{
+		"1":  0,
+		"2":  1,
+		"3A": 2,
+		"3B": 3,
+		"4A": 4,
+		"4B": 5,
+	}
+
+	var crossPoint86Map = map[string]int{
+		"1":  0,
+		"2":  1,
+		"3A": 2,
+		"3B": 3,
+		"4A": 4,
+		"4B": 5,
+		"5":  6,
+		"6":  7,
+	}
+
+	var crossPoint108Map = map[string]int{
+		"1":  0,
+		"2":  1,
+		"3":  2,
+		"4":  3,
+		"5A": 4,
+		"5B": 5,
+		"6A": 6,
+		"6B": 7,
+		"7":  8,
+		"8":  9,
+	}
+
+	// LoopOut is already handled above
+	var in180xMap = map[string]int{
+		"1A": 0,
+		"1B": 1,
+	}
+
+	// Check if output is in one of the device maps
+
+	var index int
+	found := false
+
+	// Check Crosspoint Maps
+	if deviceType == "Matrix Switcher" {
+		if idx, ok := crossPoint84Map[output]; ok {
+			index = idx
+			found = true
+		} else if idx, ok := crossPoint86Map[output]; ok {
+			index = idx
+			found = true
+		} else if idx, ok := crossPoint108Map[output]; ok {
+			index = idx
+			found = true
+		}
+	}
+
+	// Check Scaler Maps
+	if deviceType == "Scaler" {
+		if idx, ok := in180xMap[output]; ok {
+			index = idx
+			found = true
+		}
+	}
+
+	if !found {
+		errMsg := function + " - output not found in any device map: " + output
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	framework.Log(fmt.Sprintf("%s - %s - output: %s, is at index: %d of %s", function, socketKey, output, index, resp))
+
+	result := string(resp[index])
+
+	switch result {
+	case "0":
+		return "false", nil
+	case "1":
+		return "true", nil
+	case "2":
+		return "true", nil
+	default:
+		errMsg := function + " - invalid response for output: " + output + ": " + resp
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+}
+
 // Set functions //
 
 func setVideoRouteDo(socketKey string, endpoint string, input string, output string, _ string) (string, error) {
@@ -332,7 +480,7 @@ func loginNegotiation(socketKey string) (success bool) {
 		} else {
 			// TODO: Implement unauthenticated login
 			// If no password is set, device will follow this pattern:
-			// 1. Copywright message
+			// 1. Copyright message
 			// 2. Current date
 			// 3. Empty line.  Also sometimes expects a delay before first command
 			framework.AddToErrors(socketKey, function+" - k4j5d3m - unauthenticated login not implemented yet.  Please set a password.")
