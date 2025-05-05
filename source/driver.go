@@ -261,6 +261,7 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 	// Scaler (IN 16xx) with standard mirrored outputs, just 0,1, or 2 (sync mute)
 
 	resp = strings.ReplaceAll(resp, " ", "")
+	resp = strings.ReplaceAll(resp, `"`, ``)
 
 	deviceType := deviceTypes[socketKey]
 
