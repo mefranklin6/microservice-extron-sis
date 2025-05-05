@@ -301,7 +301,7 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 			framework.AddToErrors(socketKey, errMsg)
 			return errMsg, errors.New(errMsg)
 		}
-	result := string(resp[outputInt+1]) // +1 to skip the input
+		result := string(resp[outputInt+1]) // +1 to skip the input
 		switch result {
 		case "0":
 			return "false", nil
@@ -309,6 +309,7 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 			return "true", nil
 		case "2":
 			return "true", nil
+		}
 	}
 
 	// Maps: {Input Name : String index of where to find the output in resp}
