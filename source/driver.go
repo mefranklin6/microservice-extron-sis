@@ -257,8 +257,8 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 	// DA returns string with single space between the characters.  First character is input.
 	// Matrix with "A" or "B" ex CP84: "0 0 0 0 0 0" which is 1,2,3A,3B,4A,4B
 	// Scaler with loopout (IN 1808) : "0 0 0", which is 1A,1B,LoopOut
-	// Scaler with mirrored but individually controlled outs (IN 1804) : "0 0"
-	// Scaler (IN 16xx) with standard mirrored outputs, just 0,1, or 2 (sync mute)
+	// Scaler with mirrored but individually-mute-controlled outs (IN 1804) : "0 0"
+	// Scaler (IN 16xx) with standard mirrored outputs, just 0,1, or 2
 
 	resp = strings.ReplaceAll(resp, " ", "")
 	resp = strings.ReplaceAll(resp, `"`, ``)
@@ -293,8 +293,31 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 		}
 	}
 
+	// DA: the first character is the input
+	if deviceType == "Distribution Amplifier" {
+		outputInt, err := strconv.Atoi(output)
+		if err != nil {
+			errMsg := function + " - invalid output number: " + output
+			framework.AddToErrors(socketKey, errMsg)
+			return errMsg, errors.New(errMsg)
+		}
+	result := string(resp[outputInt+1]) // +1 to skip the input
+		switch result {
+		case "0":
+			return "false", nil
+		case "1":
+			return "true", nil
+		case "2":
+			return "true", nil
+	}
+
 	// Maps: {Input Name : String index of where to find the output in resp}
-	// Note: So far these are all just unique enough, ex: only the 108 has 6A and seems 3B is always mapped to 4.
+	// Note: So far these are all just both just unique and similar enough,
+	// ex: only the 108 has "6A" and all devices that have a "3B" index on 4.
+
+	// Make sure to call the correct output;
+	// Calling "4" when you meant "4A" on a CP84 would result in an incorrect response (CP108 index)
+
 	// ...this may change in the future as more devices are added and may require a re-design.
 
 	var crossPoint84Map = map[string]int{
