@@ -199,7 +199,6 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 
 	// handle Distribution Amplifier (one input only)
 	if strings.Count(resp, "*") == 1 && len(resp) > 1 && (resp[1] == '1' || resp[1] == '0') {
-		resp = `"` + resp[1:]
 		if resp == "1" {
 			return "true", nil
 		} else if resp == "0" {
@@ -254,7 +253,7 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 
 	// all return strings contain "0" (not muted), "1" (muted with sync) or 2 (sync mute) for each output
 
-	// DA returns string with single space between the characters.  First character is input.
+	// DA returns string with single space between the characters, local HDMI may be the first
 	// Matrix with "A" or "B" ex CP84: "0 0 0 0 0 0" which is 1,2,3A,3B,4A,4B
 	// Scaler with loopout (IN 1808) : "0 0 0", which is 1A,1B,LoopOut
 	// Scaler with mirrored but individually-mute-controlled outs (IN 1804) : "0 0"
@@ -293,15 +292,17 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 		}
 	}
 
-	// DA: the first character is the input
+	// DA
+	// FIXME: DTP DA's with a HDMI 'loop through' with have that output as first in the string
+	// ...this will result in an off-by-one error for these devices
 	if deviceType == "Distribution Amplifier" {
-		outputInt, err := strconv.Atoi(output)
+		outputInt, err := strconv.Atoi(output) // TODO: add support to call 'loop through' output
 		if err != nil {
 			errMsg := function + " - invalid output number: " + output
 			framework.AddToErrors(socketKey, errMsg)
 			return errMsg, errors.New(errMsg)
 		}
-		result := string(resp[outputInt+1]) // +1 to skip the input
+		result := string(resp[outputInt])
 		switch result {
 		case "0":
 			return "false", nil
