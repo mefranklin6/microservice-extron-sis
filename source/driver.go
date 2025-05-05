@@ -199,7 +199,8 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 
 	// handle Distribution Amplifier (one input only)
 	if strings.Count(resp, "*") == 1 && len(resp) > 1 && (resp[1] == '1' || resp[1] == '0') {
-		if resp == "1" {
+		input := string(resp[1])
+		if input == "1" {
 			return "true", nil
 		} else if resp == "0" {
 			return "false", nil
