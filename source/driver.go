@@ -372,6 +372,8 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 
 	result := string(resp[index])
 
+	framework.Log(fmt.Sprintf("%s - %s - result: %s", function, socketKey, result))
+
 	switch result {
 	case "0":
 		return "false", nil
