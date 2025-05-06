@@ -156,16 +156,16 @@ var setFunctionsMap = map[string]func(string, string, string, string, string) (s
 	"power":              notImplemented, // TODO
 	"volume":             notImplemented, // TODO
 	"videoroute":         setVideoRouteDo,
-	"audioandvideoroute": setAudioAndVideoRoute, // TODO
-	"audiomute":          notImplemented,        // TODO
-	"videomute":          notImplemented,        // TODO
-	"videosyncmute":      notImplemented,        // TODO
-	"audioandvideomute":  notImplemented,        // TODO
-	"matrixmute":         notImplemented,        // TODO
-	"matrixvolume":       notImplemented,        // TODO
-	"setstate":           notImplemented,        // TODO
-	"triggerstate":       notImplemented,        // TODO
-	"timedtriggerstate":  notImplemented,        // TODO
+	"audioandvideoroute": setAudioAndVideoRoute,
+	"audiomute":          notImplemented, // TODO
+	"videomute":          notImplemented, // TODO
+	"videosyncmute":      notImplemented, // TODO
+	"audioandvideomute":  notImplemented, // TODO
+	"matrixmute":         notImplemented, // TODO
+	"matrixvolume":       notImplemented, // TODO
+	"setstate":           notImplemented, // TODO
+	"triggerstate":       notImplemented, // TODO
+	"timedtriggerstate":  notImplemented, // TODO
 }
 
 // Output Maps: {Input Name : index of where to find the output in a device response string}
@@ -487,8 +487,8 @@ func notImplemented(socketKey string, endpoint string, _ string, _ string, _ str
 }
 
 // Internal
-func loginNegotiation(socketKey string) (success bool) {
-	function := "loginNegotiation"
+func telnetLoginNegotiation(socketKey string) (success bool) {
+	function := "telnetLoginNegotiation"
 
 	// Get password. Extron Telnet connection assumes 'admin' as username
 	password := "" // device expects empty string if no password is set
@@ -544,7 +544,7 @@ func ensureActiveConnection(socketKey string) error {
 	connected := framework.CheckConnectionsMapExists(socketKey)
 	if connected == false {
 		if framework.UseTelnet {
-			negotiation := loginNegotiation(socketKey)
+			negotiation := telnetLoginNegotiation(socketKey)
 			if negotiation == false {
 				errMsg := fmt.Sprintf(function + " - h3boid - error logging in")
 				framework.AddToErrors(socketKey, errMsg)
