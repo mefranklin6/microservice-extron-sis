@@ -175,7 +175,7 @@ var setFunctionsMap = map[string]func(string, string, string, string, string) (s
 // Make sure to call the correct output;
 // Calling "4" when you meant "4A" on a CP84 would result in an incorrect response (CP108 index)
 
-// ...this may change in the future as more devices are added and may require a re-design.
+// FIXME: New DTP3 CrossPoints are going to break this system
 
 var crossPoint84Outputs = map[string]int{
 	"1":  0,
@@ -629,8 +629,8 @@ func findDeviceType(socketKey string) (string, error) {
 	case strings.Contains(resp, "dmp") || strings.Contains(resp, "digital audio"):
 		deviceType = "Audio Processor"
 
-	//case strings.Contains(resp, "TODO:"):
-	//	deviceType = "Collaboration Systems" //ex: ShareLink
+	case strings.Contains(resp, "Presentation System"):
+		deviceType = "Collaboration Systems" //ex: ShareLink
 
 	case strings.Contains(resp, "matrix") && !strings.Contains(resp, "audio"):
 		deviceType = "Matrix Switcher"
