@@ -29,8 +29,8 @@ var errorResponsesMap = map[string]string{
 	"E33": "Bad file type for logo",
 }
 
-var deviceTypes = make(map[string]string)      // socketKey -> deviceType
-var modelDescription = make(map[string]string) // socketKey -> modeldescription response
+var deviceTypes = make(map[string]string)  // socketKey -> deviceType
+var deviceModels = make(map[string]string) // socketKey -> modeldescr
 
 // These can be called as endpoints but may not be part of OpenAV spec
 var publicGetCmdEndpoints = map[string]string{
@@ -619,18 +619,25 @@ func findDeviceType(socketKey string) (string, error) {
 	logStr := fmt.Sprintf("%s - %s - Device type response: %s", function, socketKey, resp)
 	framework.Log(logStr)
 
+	deviceType := categorizeDeviceType(socketKey, resp)
+
+	return deviceType, err
+}
+
+func categorizeDeviceType(socketKey string, modelDescriptionResp string) string {
+	function := "categorizeDeviceType"
+
 	deviceType := "unknown"
 
-	resp = strings.ToLower(resp)
-	modelDescription[socketKey] = resp // cache the model description
+	resp := strings.ToLower(modelDescriptionResp)
 
-	// TODO: commented out items
+	// TODO: commented out items and any additional device types
 	switch {
 	case strings.Contains(resp, "dmp") || strings.Contains(resp, "digital audio"):
 		deviceType = "Audio Processor"
 
 	case strings.Contains(resp, "Presentation System"):
-		deviceType = "Collaboration Systems" //ex: ShareLink
+		deviceType = "Collaboration Systems" //ex: ShareLink. Note: SSH only
 
 	case strings.Contains(resp, "matrix") && !strings.Contains(resp, "audio"):
 		deviceType = "Matrix Switcher"
@@ -638,7 +645,7 @@ func findDeviceType(socketKey string) (string, error) {
 	case strings.Contains(resp, "scaling presentation switcher"):
 		deviceType = "Scaler" // IN 16xx series
 
-	case resp == "seemless presentation switcher":
+	case resp == "seamless presentation switcher":
 		deviceType = "Scaler" // IN 18xx series
 
 	case resp == "streaming media processor":
@@ -657,7 +664,8 @@ func findDeviceType(socketKey string) (string, error) {
 	deviceTypes[socketKey] = deviceType
 	framework.Log(fmt.Sprintf("%s - %s - Device type determined: %s", function, socketKey, deviceType))
 
-	return deviceType, nil
+	return deviceType
+
 }
 
 // Main function that handles device type dependent commands
