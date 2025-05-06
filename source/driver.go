@@ -29,7 +29,8 @@ var errorResponsesMap = map[string]string{
 	"E33": "Bad file type for logo",
 }
 
-var deviceTypes = make(map[string]string) // socketKey -> deviceType
+var deviceTypes = make(map[string]string)      // socketKey -> deviceType
+var modelDescription = make(map[string]string) // socketKey -> modeldescription response
 
 // These can be called as endpoints but may not be part of OpenAV spec
 var publicGetCmdEndpoints = map[string]string{
@@ -168,7 +169,7 @@ var setFunctionsMap = map[string]func(string, string, string, string, string) (s
 }
 
 // Output Maps: {Input Name : index of where to find the output in a device response string}
-// Note: So far these are all just both just unique and similar enough,
+// Note: So far these are all just both just unique and similar enough to work.
 // ex: only the 108 has "6A" and all devices that have a "3B" index on 4.
 
 // Make sure to call the correct output;
@@ -621,6 +622,7 @@ func findDeviceType(socketKey string) (string, error) {
 	deviceType := "unknown"
 
 	resp = strings.ToLower(resp)
+	modelDescription[socketKey] = resp // cache the model description
 
 	// TODO: commented out items
 	switch {
