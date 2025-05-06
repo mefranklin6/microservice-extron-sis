@@ -13,15 +13,20 @@ import (
 // Mappings //
 
 var errorResponsesMap = map[string]string{
-	"E10": "Unrecognized command",
+	"E01": "Invalid input number",
+	"E10": "Invalid command",
+	"E11": "Invalid preset number",
 	"E12": "Invalid port number",
-	"E13": "Invalid parameter (number is out of range)",
-	"E14": "Not valid for this configuration",
+	"E13": "Invalid value",
+	"E14": "Invalid command for this configuration",
 	"E17": "Invalid command for signal type",
 	"E18": "System timed out",
 	"E22": "Busy",
 	"E24": "Privilege violation",
+	"E25": "Device not present",
+	"E26": "Maximum number of connections exceeded",
 	"E28": "Bad name or file not found",
+	"E33": "Bad file type for logo",
 }
 
 var deviceTypes = make(map[string]string) // socketKey -> deviceType
