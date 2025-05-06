@@ -263,7 +263,12 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 	resp = strings.ReplaceAll(resp, " ", "")
 	resp = strings.ReplaceAll(resp, `"`, ``)
 
-	deviceType := deviceTypes[socketKey]
+	deviceType, err := findDeviceType(socketKey)
+	if err != nil {
+		errMsg := fmt.Sprintf(function+" - a9ebb - error finding device type: %s", err.Error())
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
 
 	// Simple device, only one character reply
 	// Could be IN 16xx or a switcher
@@ -379,10 +384,7 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 			index = idx
 			found = true
 		}
-	}
-
-	// Check Scaler Maps
-	if deviceType == "Scaler" {
+	} else if deviceType == "Scaler" {
 		if idx, ok := in180xMap[output]; ok {
 			index = idx
 			found = true
@@ -651,7 +653,7 @@ func deviceTypeDependantCommand(socketKey string, endpoint string, method string
 
 	deviceType, err := findDeviceType(socketKey)
 	if err != nil {
-		errMsg := fmt.Sprintf(function+" - l6ehb - error finding device type: %s", err.Error())
+		errMsg := fmt.Sprintf(function+" - a9ebb - error finding device type: %s", err.Error())
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
