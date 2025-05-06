@@ -162,6 +162,54 @@ var setFunctionsMap = map[string]func(string, string, string, string, string) (s
 	"timedtriggerstate":  notImplemented,        // TODO
 }
 
+// Output Maps: {Input Name : index of where to find the output in a device response string}
+// Note: So far these are all just both just unique and similar enough,
+// ex: only the 108 has "6A" and all devices that have a "3B" index on 4.
+
+// Make sure to call the correct output;
+// Calling "4" when you meant "4A" on a CP84 would result in an incorrect response (CP108 index)
+
+// ...this may change in the future as more devices are added and may require a re-design.
+
+var crossPoint84Outputs = map[string]int{
+	"1":  0,
+	"2":  1,
+	"3A": 2,
+	"3B": 3,
+	"4A": 4,
+	"4B": 5,
+}
+
+var crossPoint86Outputs = map[string]int{
+	"1":  0,
+	"2":  1,
+	"3A": 2,
+	"3B": 3,
+	"4A": 4,
+	"4B": 5,
+	"5":  6,
+	"6":  7,
+}
+
+var crossPoint108Outputs = map[string]int{
+	"1":  0,
+	"2":  1,
+	"3":  2,
+	"4":  3,
+	"5A": 4,
+	"5B": 5,
+	"6A": 6,
+	"6B": 7,
+	"7":  8,
+	"8":  9,
+}
+
+// LoopOut is handled as a special case
+var in180xOutputs = map[string]int{
+	"1A": 0,
+	"1B": 1,
+}
+
 // Main Functions //
 
 // Get functions //
@@ -319,73 +367,24 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 		}
 	}
 
-	// Maps: {Input Name : String index of where to find the output in resp}
-	// Note: So far these are all just both just unique and similar enough,
-	// ex: only the 108 has "6A" and all devices that have a "3B" index on 4.
-
-	// Make sure to call the correct output;
-	// Calling "4" when you meant "4A" on a CP84 would result in an incorrect response (CP108 index)
-
-	// ...this may change in the future as more devices are added and may require a re-design.
-
-	var crossPoint84Map = map[string]int{
-		"1":  0,
-		"2":  1,
-		"3A": 2,
-		"3B": 3,
-		"4A": 4,
-		"4B": 5,
-	}
-
-	var crossPoint86Map = map[string]int{
-		"1":  0,
-		"2":  1,
-		"3A": 2,
-		"3B": 3,
-		"4A": 4,
-		"4B": 5,
-		"5":  6,
-		"6":  7,
-	}
-
-	var crossPoint108Map = map[string]int{
-		"1":  0,
-		"2":  1,
-		"3":  2,
-		"4":  3,
-		"5A": 4,
-		"5B": 5,
-		"6A": 6,
-		"6B": 7,
-		"7":  8,
-		"8":  9,
-	}
-
-	// LoopOut is already handled above
-	var in180xMap = map[string]int{
-		"1A": 0,
-		"1B": 1,
-	}
-
-	// Check if output is in one of the device maps
-
+	// Setup for checking maps
 	var index int
 	found := false
 
-	// Check Crosspoint Maps
+	// Check Output Maps
 	if deviceType == "Matrix Switcher" {
-		if idx, ok := crossPoint84Map[output]; ok {
+		if idx, ok := crossPoint84Outputs[output]; ok {
 			index = idx
 			found = true
-		} else if idx, ok := crossPoint86Map[output]; ok {
+		} else if idx, ok := crossPoint86Outputs[output]; ok {
 			index = idx
 			found = true
-		} else if idx, ok := crossPoint108Map[output]; ok {
+		} else if idx, ok := crossPoint108Outputs[output]; ok {
 			index = idx
 			found = true
 		}
 	} else if deviceType == "Scaler" {
-		if idx, ok := in180xMap[output]; ok {
+		if idx, ok := in180xOutputs[output]; ok {
 			index = idx
 			found = true
 		}
@@ -396,6 +395,8 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
+
+	// If we got here, we have a valid result
 
 	framework.Log(fmt.Sprintf("%s - %s - output: %s, is at index: %d of %s", function, socketKey, output, index, resp))
 
