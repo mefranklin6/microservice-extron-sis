@@ -328,21 +328,26 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 		return "true", nil
 	}
 
-	// Query is for loop out, could be IN1808
+	// Query is for loop out (built for IN 1808)
+	// Future maintainers: any new device with LoopOut needs to be handled here
 	if output == "LoopOut" {
 		framework.Log(fmt.Sprintf("%s - %s - LoopOut response: %s", function, socketKey, resp))
-		result := string(resp[2])
-		switch result {
-		case "0":
-			return "false", nil
-		case "1":
-			return "true", nil
-		case "2":
-			return "true", nil
-		default:
-			errMsg := function + " - invalid loopout response: " + resp
-			framework.AddToErrors(socketKey, errMsg)
-			return errMsg, errors.New(errMsg)
+		if len(resp) == 3 {
+			result := string(resp[2])
+			switch result {
+			case "0":
+				return "false", nil
+			case "1":
+				return "true", nil
+			case "2":
+				return "true", nil
+			default:
+				errMsg := function + " - invalid loopout response: " + resp
+				framework.AddToErrors(socketKey, errMsg)
+				return errMsg, errors.New(errMsg)
+			}
+		} else { // 1808 is only known LoopOut device, this was called on the wrong device, or we need update handling
+			framework.AddToErrors(socketKey, function+" - LoopOut called, but device is not IN1808 "+resp)
 		}
 	}
 
