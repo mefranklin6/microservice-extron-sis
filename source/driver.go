@@ -37,7 +37,7 @@ var publicGetCmdEndpoints = map[string]string{
 	"firmwareversion":      "Q\r", // is universal across all products
 	"temperature":          "W20STAT\r",
 	"partnumber":           "N\r",
-	"modelname":            "I\r",
+	"modelname":            "I\r", // does not work on older scalers
 	"modeldescription":     "2I\r",
 	"systemstatus":         "S\r",
 	"systemmemoryusage":    "3I\r",
@@ -176,6 +176,7 @@ var setFunctionsMap = map[string]func(string, string, string, string, string) (s
 // Calling "4" when you meant "4A" on a CP84 would result in an incorrect response (CP108 index)
 
 // FIXME: New DTP3 CrossPoints are going to break this system
+// TODO: "I\r" on 1804's and CrossPoints will return the model name (not on scalers)
 
 var crossPoint84Outputs = map[string]int{
 	"1":  0,
@@ -666,6 +667,30 @@ func categorizeDeviceType(socketKey string, modelDescriptionResp string) string 
 
 	return deviceType
 
+}
+
+// Internal: returns the model name from a package-level cache or queries the device.
+// Note: does not work on older scalers (IN 16xx series) and some other devices
+func findModelName(socketKey string) (string, error) {
+	function := "findModelName"
+
+	if modelName, exists := deviceModels[socketKey]; exists {
+		framework.Log(fmt.Sprintf("%s - %s - Device model found in cache: %s", function, socketKey, modelName))
+		return modelName, nil // cache hit
+	}
+
+	// Haven't heard from device yet, send a query
+	cmdString := publicGetCmdEndpoints["modelname"]
+	resp, err := sendBasicCommand(socketKey, cmdString)
+	if err != nil {
+		errMsg := fmt.Sprintf(function+" - jrBaq3 - error getting device model: %s", err.Error())
+		return "", errors.New(errMsg)
+	}
+
+	logStr := fmt.Sprintf("%s - %s - Device model response: %s", function, socketKey, resp)
+	framework.Log(logStr)
+
+	return resp, nil
 }
 
 // Main function that handles device type dependent commands
