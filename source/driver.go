@@ -555,12 +555,9 @@ func ensureActiveConnection(socketKey string) error {
 				return errors.New(errMsg)
 			}
 		}
-	} else { // connected
-		if framework.KeepAlivePolling {
-			// startKeepAlivePoll only adds new goroutines if they don't already exist
-			startKeepAlivePoll(socketKey, keepAlivePollingInterval, keepAliveCmd)
-		}
 	}
+	// startKeepAlivePoll will not add new goroutines if they already exist for the socketKey
+	startKeepAlivePoll(socketKey, keepAlivePollingInterval, keepAliveCmd)
 	return nil
 }
 
