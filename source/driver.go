@@ -553,9 +553,12 @@ func ensureActiveConnection(socketKey string) error {
 				errMsg := fmt.Sprintf(function + " - h3boid - error logging in")
 				framework.AddToErrors(socketKey, errMsg)
 				return errors.New(errMsg)
-			} else { // successful telnet login
-				startKeepAlivePoll(socketKey, keepAlivePollingInterval)
 			}
+		}
+	} else { // connected
+		if framework.KeepAlivePolling {
+			// startKeepAlivePoll only adds new goroutines if they don't already exist
+			startKeepAlivePoll(socketKey, keepAlivePollingInterval, keepAliveCmd)
 		}
 	}
 	return nil
@@ -697,7 +700,7 @@ func findModelName(socketKey string) (string, error) {
 }
 
 // Internal: begins a periodic polling loop to keep the connection alive
-func startKeepAlivePoll(socketKey string, interval time.Duration) error {
+func startKeepAlivePoll(socketKey string, interval time.Duration, keepAliveCmd string) error {
 	function := "startKeepAlivePoll"
 
 	keepAlivePollRoutinesMutex.Lock()
@@ -724,7 +727,7 @@ func startKeepAlivePoll(socketKey string, interval time.Duration) error {
 			select {
 			case <-ticker.C:
 				// 'Q' is universal across all devices (but may return different responses)
-				resp, err := sendBasicCommand(socketKey, "Q\r")
+				resp, err := sendBasicCommand(socketKey, keepAliveCmd)
 				if err != nil {
 					framework.AddToErrors(socketKey, fmt.Sprintf("%s - failed: %v", function, err))
 				}
