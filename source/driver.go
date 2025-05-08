@@ -696,7 +696,7 @@ func findModelName(socketKey string) (string, error) {
 	return resp, nil
 }
 
-// Internal: begins a periodic polling loop to keep the connection alive
+// Internal: begins a periodic polling loop to keep the connection alive if one does not exist
 func startKeepAlivePoll(socketKey string, interval time.Duration, keepAliveCmd string) error {
 	function := "startKeepAlivePoll"
 
@@ -741,23 +741,11 @@ func startKeepAlivePoll(socketKey string, interval time.Duration, keepAliveCmd s
 	return nil
 }
 
-// stops the keepalive polling for the socketKey
-func stopKeepAlivePoll(socketKey string) {
-	function := "stopKeepAlivePoll"
-
-	keepAlivePollRoutinesMutex.Lock()
-	defer keepAlivePollRoutinesMutex.Unlock()
-
-	if stopCh, exists := keepAlivePollRoutines[socketKey]; exists {
-		close(stopCh)
-		delete(keepAlivePollRoutines, socketKey)
-		framework.Log(fmt.Sprintf("%s - requested stop for %s", function, socketKey))
-	}
-}
-
 // stops all running keepalive routines
-func stopAllKeepalivesPolling() {
-	function := "stopAllKeepalivesPolling"
+func stopAllKeepAlivePolling() {
+	function := "stopAllKeepAlivePolling"
+
+	framework.KeepAlivePolling = false
 
 	keepAlivePollRoutinesMutex.Lock()
 	defer keepAlivePollRoutinesMutex.Unlock()
@@ -769,14 +757,14 @@ func stopAllKeepalivesPolling() {
 	}
 }
 
-// Checks if a keepalive routine is active for the socketKey
-func isKeepalivePollRunning(socketKey string) bool {
-	// function := "isKeepalivePollRunning"
-	keepAlivePollRoutinesMutex.Lock()
-	defer keepAlivePollRoutinesMutex.Unlock()
+// re-enables the polling flag
+// polling will resume on the next command per device
+func restartKeepAlivePolling() {
+	function := "restartKeepAlivePolling"
 
-	_, exists := keepAlivePollRoutines[socketKey]
-	return exists
+	framework.KeepAlivePolling = true
+
+	framework.Log(fmt.Sprintf("%s - polling will resume on next command per device", function))
 }
 
 // Main function that handles device type dependent commands
