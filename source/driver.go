@@ -5,13 +5,19 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/mefranklin6/microservice-framework/framework" // Change after PR#3 for Dartmouth
 )
 
-// Mappings //
+// Package-level variables
+var deviceTypes = make(map[string]string)              // socketKey -> deviceType
+var deviceModels = make(map[string]string)             // socketKey -> modeldescription
+var keepAlivePollRoutines = make(map[string]chan bool) // socketKey -> stop channel
+var keepAlivePollRoutinesMutex sync.Mutex
 
+// Mappings //
 var errorResponsesMap = map[string]string{
 	"E01": "Invalid input number",
 	"E10": "Invalid command",
@@ -28,9 +34,6 @@ var errorResponsesMap = map[string]string{
 	"E28": "Bad name or file not found",
 	"E33": "Bad file type for logo",
 }
-
-var deviceTypes = make(map[string]string)  // socketKey -> deviceType
-var deviceModels = make(map[string]string) // socketKey -> modeldescr
 
 // These can be called as endpoints but may not be part of OpenAV spec
 var publicGetCmdEndpoints = map[string]string{
@@ -550,12 +553,12 @@ func ensureActiveConnection(socketKey string) error {
 				errMsg := fmt.Sprintf(function + " - h3boid - error logging in")
 				framework.AddToErrors(socketKey, errMsg)
 				return errors.New(errMsg)
+			} else { // successful telnet login
+				startKeepAlivePoll(socketKey, keepAlivePollingInterval)
 			}
-		} else {
-			return nil // assume serial connection
 		}
 	}
-	return nil // Connection map already in framework
+	return nil
 }
 
 // Internal: Checks if the device returned an error code.  If it did, return a formatted error message.
@@ -691,6 +694,89 @@ func findModelName(socketKey string) (string, error) {
 	framework.Log(logStr)
 
 	return resp, nil
+}
+
+// Internal: begins a periodic polling loop to keep the connection alive
+func startKeepAlivePoll(socketKey string, interval time.Duration) error {
+	function := "startKeepAlivePoll"
+
+	keepAlivePollRoutinesMutex.Lock()
+	defer keepAlivePollRoutinesMutex.Unlock()
+
+	// Check if already running
+	if _, exists := keepAlivePollRoutines[socketKey]; exists {
+		framework.Log(fmt.Sprintf("%s - already running for %s", function, socketKey))
+		return nil
+	}
+
+	// Create stop channel
+	stopCh := make(chan bool)
+	keepAlivePollRoutines[socketKey] = stopCh
+
+	// Start keepalive goroutine
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		framework.Log(fmt.Sprintf("%s - started for %s with interval %v", function, socketKey, interval))
+
+		for {
+			select {
+			case <-ticker.C:
+				// 'Q' is universal across all devices (but may return different responses)
+				resp, err := sendBasicCommand(socketKey, "Q\r")
+				if err != nil {
+					framework.AddToErrors(socketKey, fmt.Sprintf("%s - failed: %v", function, err))
+				}
+				if resp == "" || strings.Contains(resp, "error") {
+					framework.AddToErrors(socketKey, fmt.Sprintf("%s - unexpected keepalive response: %s", function, resp))
+				}
+			case <-stopCh:
+				framework.Log(fmt.Sprintf("%s - stopped for %s", function, socketKey))
+				return
+			}
+		}
+	}()
+
+	return nil
+}
+
+// stops the keepalive polling for the socketKey
+func stopKeepAlivePoll(socketKey string) {
+	function := "stopKeepAlivePoll"
+
+	keepAlivePollRoutinesMutex.Lock()
+	defer keepAlivePollRoutinesMutex.Unlock()
+
+	if stopCh, exists := keepAlivePollRoutines[socketKey]; exists {
+		close(stopCh)
+		delete(keepAlivePollRoutines, socketKey)
+		framework.Log(fmt.Sprintf("%s - requested stop for %s", function, socketKey))
+	}
+}
+
+// stops all running keepalive routines
+func stopAllKeepalivesPolling() {
+	function := "stopAllKeepalivesPolling"
+
+	keepAlivePollRoutinesMutex.Lock()
+	defer keepAlivePollRoutinesMutex.Unlock()
+
+	for socketKey, stopCh := range keepAlivePollRoutines {
+		close(stopCh)
+		delete(keepAlivePollRoutines, socketKey)
+		framework.Log(fmt.Sprintf("%s - stopped for %s", function, socketKey))
+	}
+}
+
+// Checks if a keepalive routine is active for the socketKey
+func isKeepalivePollRunning(socketKey string) bool {
+	// function := "isKeepalivePollRunning"
+	keepAlivePollRoutinesMutex.Lock()
+	defer keepAlivePollRoutinesMutex.Unlock()
+
+	_, exists := keepAlivePollRoutines[socketKey]
+	return exists
 }
 
 // Main function that handles device type dependent commands

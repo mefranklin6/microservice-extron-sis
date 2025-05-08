@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"time"
 
 	"github.com/mefranklin6/microservice-framework/framework" // Change after PR#3 for Dartmouth
 )
@@ -17,6 +18,17 @@ func setFrameworkGlobals() {
 
 	framework.RegisterMainGetFunc(doDeviceSpecificGet)
 	framework.RegisterMainSetFunc(doDeviceSpecificSet)
+}
+
+// Package-level tunables
+var keepAlivePolling = true                    // default: true
+var keepAlivePollingInterval = 5 * time.Second // default : 5 seconds
+var maintenancePeriod = struct {               // lets the connection drop during this period, daily
+	Start time.Time
+	End   time.Time
+}{
+	Start: time.Date(0, 1, 1, 2, 0, 0, 0, time.UTC), // 2:00 AM
+	End:   time.Date(0, 1, 1, 3, 0, 0, 0, time.UTC), // 3:00 AM
 }
 
 // Every microservice using this golang microservice framework needs to provide this function to invoke functions to do sets.
