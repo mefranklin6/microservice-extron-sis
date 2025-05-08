@@ -14,6 +14,7 @@ func setFrameworkGlobals() {
 	framework.CheckFunctionAppendBehavior = "Remove older instance"
 	framework.UseTelnet = true
 	framework.KeepAlive = true
+	framework.KeepAlivePolling = true              // make framework aware we're implementing polling here
 	framework.DisconnectAfterDoneRefreshing = true // or else devices will close
 
 	framework.RegisterMainGetFunc(doDeviceSpecificGet)
