@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mefranklin6/microservice-framework/framework" // Change after PR#3 for Dartmouth
+	"github.com/mefranklin6/microservice-framework/framework" // Change after PR#4 for Dartmouth
 )
 
 // Package-level variables
@@ -479,7 +479,9 @@ func setAudioAndVideoRoute(socketKey string, endpoint string, input string, outp
 	}
 }
 
+///////////////////////////////////////////////////////////////////////////////
 // Helper functions //
+///////////////////////////////////////////////////////////////////////////////
 
 // Placeholder for not implemented functions
 func notImplemented(socketKey string, endpoint string, _ string, _ string, _ string) (string, error) {
@@ -723,7 +725,6 @@ func startKeepAlivePoll(socketKey string, interval time.Duration, keepAliveCmd s
 		for {
 			select {
 			case <-ticker.C:
-				// 'Q' is universal across all devices (but may return different responses)
 				resp, err := sendBasicCommand(socketKey, keepAliveCmd)
 				if err != nil {
 					framework.AddToErrors(socketKey, fmt.Sprintf("%s - failed: %v", function, err))
@@ -742,7 +743,7 @@ func startKeepAlivePoll(socketKey string, interval time.Duration, keepAliveCmd s
 }
 
 // stops all running keepalive routines
-func stopAllKeepAlivePolling() {
+func stopAllKeepAlivePolling() (string, error) {
 	function := "stopAllKeepAlivePolling"
 
 	framework.KeepAlivePolling = false
@@ -755,16 +756,18 @@ func stopAllKeepAlivePolling() {
 		delete(keepAlivePollRoutines, socketKey)
 		framework.Log(fmt.Sprintf("%s - stopped for %s", function, socketKey))
 	}
+	return "ok", nil
 }
 
 // re-enables the polling flag
 // polling will resume on the next command per device
-func restartKeepAlivePolling() {
+func restartKeepAlivePolling() (string, error) {
 	function := "restartKeepAlivePolling"
 
 	framework.KeepAlivePolling = true
-
 	framework.Log(fmt.Sprintf("%s - polling will resume on next command per device", function))
+	return "ok", nil
+
 }
 
 // Main function that handles device type dependent commands

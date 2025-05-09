@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/mefranklin6/microservice-framework/framework" // Change after PR#3 for Dartmouth
+	"github.com/mefranklin6/microservice-framework/framework" // Change after PR#4 for Dartmouth
 )
 
 func setFrameworkGlobals() {
@@ -57,6 +57,10 @@ func doDeviceSpecificSet(socketKey string, setting string, arg1 string, arg2 str
 		return specialEndpointSet(socketKey, "videoroute", arg1, arg2, "") // arg1: output, arg2: input
 	case "audioandvideoroute":
 		return specialEndpointSet(socketKey, "audioandvideoroute", arg1, arg2, "") // arg1: output, arg2: input
+	case "stopallkeepalivepolling":
+		return stopAllKeepAlivePolling()
+	case "restartkeepalivepolling":
+		return restartKeepAlivePolling()
 		//case "special1":
 		//	return setSpecial1(socketKey, arg1, arg2)
 		//case "special2":
