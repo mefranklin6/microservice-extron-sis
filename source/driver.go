@@ -558,8 +558,10 @@ func ensureActiveConnection(socketKey string) error {
 			}
 		}
 	}
-	// startKeepAlivePoll will not add new goroutines if they already exist for the socketKey
-	startKeepAlivePoll(socketKey, keepAlivePollingInterval, keepAliveCmd)
+	if framework.KeepAlivePolling {
+		// startKeepAlivePoll will not add new goroutines if they already exist for the socketKey
+		startKeepAlivePoll(socketKey, keepAlivePollingInterval, keepAliveCmd)
+	}
 	return nil
 }
 
