@@ -172,14 +172,8 @@ var setFunctionsMap = map[string]func(string, string, string, string, string) (s
 }
 
 // Output Maps: {Input Name : index of where to find the output in a device response string}
-// Note: So far these are all just both just unique and similar enough to work.
-// ex: only the 108 has "6A" and all devices that have a "3B" index on 4.
 
-// Make sure to call the correct output;
-// Calling "4" when you meant "4A" on a CP84 would result in an incorrect response (CP108 index)
-
-// FIXME: New DTP3 CrossPoints are going to break this system
-// TODO: "I\r" on 1804's and CrossPoints will return the model name (not on scalers)
+// FIXME: should only use these when we are confident of the model.
 
 var crossPoint84Outputs = map[string]int{
 	"1":  0,
@@ -510,6 +504,16 @@ func telnetLoginNegotiation(socketKey string) (success bool) {
 	for count < 7 {
 		count += 1
 		negotiationResp := framework.ReadLineFromSocket(socketKey)
+
+		// check if this is the line that contains the model name
+		if strings.Count(negotiationResp, ",") == 4 {
+			modelName := strings.TrimSpace(strings.Split(negotiationResp, ",")[2])
+			framework.Log("Model name from Extron SIS device: " + modelName)
+			deviceModels[socketKey] = modelName
+		} else if strings.Contains(negotiationResp, ",") { // unexpected response
+			framework.AddToErrors(socketKey, function+" - Help! does this line contain the model name? "+negotiationResp)
+		}
+
 		framework.Log("Printing Negotiation from Extron SIS device: " + negotiationResp)
 
 		if password != "" {
@@ -647,7 +651,7 @@ func categorizeDeviceType(socketKey string, modelDescriptionResp string) string 
 	case strings.Contains(resp, "Presentation System"):
 		deviceType = "Collaboration Systems" //ex: ShareLink. Note: SSH only
 
-	case strings.Contains(resp, "matrix") && !strings.Contains(resp, "audio"):
+	case (strings.Contains(resp, "matrix") && !strings.Contains(resp, "audio")) || strings.Contains(resp, "xtp"):
 		deviceType = "Matrix Switcher"
 
 	case strings.Contains(resp, "scaling presentation switcher"):
@@ -676,8 +680,8 @@ func categorizeDeviceType(socketKey string, modelDescriptionResp string) string 
 
 }
 
-// Internal: returns the model name from a package-level cache or queries the device.
-// Note: does not work on older scalers (IN 16xx series) and some other devices
+// Internal: returns the model name from a package-level cache
+// We presume devices announce their model name in the negotiation phase
 func findModelName(socketKey string) (string, error) {
 	function := "findModelName"
 
@@ -685,19 +689,7 @@ func findModelName(socketKey string) (string, error) {
 		framework.Log(fmt.Sprintf("%s - %s - Device model found in cache: %s", function, socketKey, modelName))
 		return modelName, nil // cache hit
 	}
-
-	// Haven't heard from device yet, send a query
-	cmdString := publicGetCmdEndpoints["modelname"]
-	resp, err := sendBasicCommand(socketKey, cmdString)
-	if err != nil {
-		errMsg := fmt.Sprintf(function+" - jrBaq3 - error getting device model: %s", err.Error())
-		return "", errors.New(errMsg)
-	}
-
-	logStr := fmt.Sprintf("%s - %s - Device model response: %s", function, socketKey, resp)
-	framework.Log(logStr)
-
-	return resp, nil
+	return "", errors.New("model name not found in cache")
 }
 
 // Internal: begins a periodic polling loop to keep the connection alive if one does not exist
