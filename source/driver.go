@@ -505,12 +505,14 @@ func telnetLoginNegotiation(socketKey string) (success bool) {
 		count += 1
 		negotiationResp := framework.ReadLineFromSocket(socketKey)
 
-		// check if this is the line that contains the model name
-		if strings.Count(negotiationResp, ",") == 4 {
+		// make use of the information presented at the login screen
+		// Needed because not every device has a command to return model name, but they present it here
+		commas := strings.Count(negotiationResp, ",")
+		if commas == 4 { // copywright, company, model name, firmware, part number
 			modelName := strings.TrimSpace(strings.Split(negotiationResp, ",")[2])
 			framework.Log("Model name from Extron SIS device: " + modelName)
 			deviceModels[socketKey] = modelName
-		} else if strings.Contains(negotiationResp, ",") { // unexpected response
+		} else if commas != 1 { // unexpected response (date line contains 1 comma)
 			framework.AddToErrors(socketKey, function+" - Help! does this line contain the model name? "+negotiationResp)
 		}
 
