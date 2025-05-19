@@ -105,6 +105,8 @@ func doDeviceSpecificGet(socketKey string, setting string, arg1 string, arg2 str
 		return specialEndpointGet(socketKey, "inputstatus", arg1, "", "") // arg1: input
 	case "videomute":
 		return specialEndpointGet(socketKey, "videomute", arg1, "", "") // arg1: output (if not matrix, use '1' for arg1)
+	case "matrixmute":
+		return specialEndpointGet(socketKey, "matrixmute", arg1, arg2, "") // arg1: input, arg2: output)
 	}
 
 	// If we get here, we didn't recognize the setting.  Send an error back to the config writer who had a bad URL.
