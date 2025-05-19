@@ -401,7 +401,7 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 			framework.AddToErrors(socketKey, errMsg)
 			return errMsg, errors.New(errMsg)
 		}
-		result := string(resp[outputInt])
+		result := string(resp[outputInt-1]) //-1: convert for 0-based index
 		switch result {
 		case "0":
 			return "false", nil
