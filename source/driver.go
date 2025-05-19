@@ -399,8 +399,9 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 
 	// Check if output is in the map
 	var index int
+	var ok bool
 	var result string
-	if index, ok := outMap[output]; ok {
+	if index, ok = outMap[output]; ok {
 		result = string(resp[index])
 	} else {
 		errMsg := function + " - invalid output name: " + output
@@ -500,6 +501,7 @@ func telnetLoginNegotiation(socketKey string) (success bool) {
 	}
 
 	count := 0
+	modelNameFound := false
 	// Breaks if the negotiations go over 7 rounds to avoid an infinite loop.
 	for count < 7 {
 		count += 1
@@ -507,13 +509,16 @@ func telnetLoginNegotiation(socketKey string) (success bool) {
 
 		// make use of the information presented at the login screen
 		// Needed because not every device has a command to return model name, but they present it here
-		commas := strings.Count(negotiationResp, ",")
-		if commas == 4 { // copywright, company, model name, firmware, part number
-			modelName := strings.TrimSpace(strings.Split(negotiationResp, ",")[2])
-			framework.Log(function + "- Model name: " + modelName)
-			deviceModels[socketKey] = modelName
-		} else if commas != 1 { // unexpected response (date line contains 1 comma)
-			framework.AddToErrors(socketKey, function+" - Help! does this line contain the model name? "+negotiationResp)
+		if !modelNameFound {
+			commas := strings.Count(negotiationResp, ",")
+			if commas == 4 { // copywright, company, model name, firmware, part number
+				modelName := strings.TrimSpace(strings.Split(negotiationResp, ",")[2])
+				framework.Log(function + "- Model name: " + modelName)
+				deviceModels[socketKey] = modelName
+				modelNameFound = true
+			} else if commas != 1 || commas != 0 { // unexpected response (date line contains 1 comma)
+				framework.AddToErrors(socketKey, function+" - Help! does this line contain the model name? "+negotiationResp)
+			}
 		}
 
 		framework.Log("Printing Negotiation from Extron SIS device: " + negotiationResp)
