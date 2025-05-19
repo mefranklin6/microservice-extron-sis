@@ -365,7 +365,7 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 
 		// assuming Extron will not make an odd number of outputs without a loop through
 		hasLoopThrough := false
-		if isEven(len(resp)) {
+		if !isEven(len(resp)) {
 			hasLoopThrough = true
 		}
 
