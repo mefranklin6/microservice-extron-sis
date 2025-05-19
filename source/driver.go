@@ -684,6 +684,8 @@ func categorizeDeviceType(socketKey string, modelDescriptionResp string) string 
 	deviceType := "unknown"
 
 	resp := strings.ToLower(modelDescriptionResp)
+	resp = strings.ReplaceAll(resp, " ", "")
+	resp = strings.ReplaceAll(resp, `"`, "")
 
 	// TODO: commented out items and any additional device types
 	switch {
