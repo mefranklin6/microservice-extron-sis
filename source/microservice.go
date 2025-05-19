@@ -57,6 +57,10 @@ func doDeviceSpecificSet(socketKey string, setting string, arg1 string, arg2 str
 		return specialEndpointSet(socketKey, "videoroute", arg1, arg2, "") // arg1: output, arg2: input
 	case "audioandvideoroute":
 		return specialEndpointSet(socketKey, "audioandvideoroute", arg1, arg2, "") // arg1: output, arg2: input
+	case "videomute":
+		return specialEndpointSet(socketKey, "videomute", arg1, arg2, "") // arg1: output, arg2: bool
+	case "videosyncmute":
+		return specialEndpointSet(socketKey, "videosyncmute", arg1, arg2, "") // arg1: output, arg2: bool
 	case "stopallkeepalivepolling":
 		return stopAllKeepAlivePolling()
 	case "restartkeepalivepolling":

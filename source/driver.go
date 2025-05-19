@@ -116,6 +116,24 @@ var internalSetCmdMap = map[string]map[string]string{
 		"Matrix Switcher": "%s*%s!\r", // arg1: input name | arg2: output name
 		"Scaler":          "%s!\r",    // arg1: input name
 	},
+	"videomute": {
+		"Matrix Switcher":        "%s*1B\r", // arg1: output name
+		"Scaler":                 "%s*1B\r",
+		"Switcher":               "%s*1B\r",
+		"Distribution Amplifier": "%s*1B\r",
+	},
+	"videounmute": {
+		"Matrix Switcher":        "%s*0B\r", // arg1: output name
+		"Scaler":                 "%s*0B\r",
+		"Switcher":               "%s*0B\r",
+		"Distribution Amplifier": "%s*0B\r",
+	},
+	"videosyncmute": {
+		"Matrix Switcher":        "%s*2B\r", // arg1: output name
+		"Scaler":                 "%s*2B\r",
+		"Switcher":               "%s*2B\r",
+		"Distribution Amplifier": "%s*2B\r",
+	},
 
 	//"globalvideomute":        "1*B\r",
 	//"globalvideoandsyncmute": "2*B\r",
@@ -161,8 +179,8 @@ var setFunctionsMap = map[string]func(string, string, string, string, string) (s
 	"videoroute":         setVideoRouteDo,
 	"audioandvideoroute": setAudioAndVideoRoute,
 	"audiomute":          notImplemented, // TODO
-	"videomute":          notImplemented, // TODO
-	"videosyncmute":      notImplemented, // TODO
+	"videomute":          setVideoMuteDo,
+	"videosyncmute":      setVideoSyncMuteDo,
 	"audioandvideomute":  notImplemented, // TODO
 	"matrixmute":         notImplemented, // TODO
 	"matrixvolume":       notImplemented, // TODO
@@ -502,6 +520,68 @@ func setAudioAndVideoRoute(socketKey string, endpoint string, input string, outp
 		return "ok", nil
 	default:
 		return "unknown response: " + resp, nil
+	}
+}
+
+func setVideoMuteDo(socketKey string, endpoint string, output string, state string, _ string) (string, error) {
+	function := "setVideoMuteDo"
+
+	var cmd string
+	if state == "true" {
+		cmd = "videomute"
+	} else {
+		cmd = "videounmute"
+	}
+
+	// DA with loop through, loop through is output "0"
+	// Matrix switchers need to refer to output by name (ex: "3B")
+	// IN 180x needs to refer to output by number (ex: 1B would be "2")
+	// Non IN 180x Scalers or switchers can just call "1"
+	resp, err := deviceTypeDependantCommand(socketKey, cmd, "SET", output, "", "")
+	if err != nil {
+		errMsg := function + "- error setting video mute: " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	// Good response for 'all' devices: Vmt(output int)*(status int)
+	if strings.Contains(resp, "Vmt") && strings.Contains(resp, output) {
+		return "ok", nil
+	} else {
+		errMsg := function + " - invalid response for video mute: " + resp
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+}
+
+func setVideoSyncMuteDo(socketKey string, endpoint string, output string, state string, _ string) (string, error) {
+	function := "setVideoSyncMuteDo"
+
+	var cmd string
+	if state == "true" {
+		cmd = "videosyncmute"
+	} else {
+		cmd = "videounmute"
+	}
+
+	// DA with loop through, loop through is output "0"
+	// Matrix switchers need to refer to output by name (ex: "3B")
+	// IN 180x needs to refer to output by number (ex: 1B would be "2")
+	// Non IN 180x Scalers or switchers can just call "1"
+	resp, err := deviceTypeDependantCommand(socketKey, cmd, "SET", output, "", "")
+	if err != nil {
+		errMsg := function + "- error setting video sync mute: " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	// Good response for 'all' devices: Vmt(output int)*(status int)
+	if strings.Contains(resp, "Vmt") && strings.Contains(resp, output) {
+		return "ok", nil
+	} else {
+		errMsg := function + " - invalid response for video sync mute: " + resp
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
 	}
 }
 
