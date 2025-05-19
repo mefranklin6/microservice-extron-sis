@@ -303,7 +303,7 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 		return errMsg, errors.New(errMsg)
 	}
 
-	// all return strings contain "0" (not muted), "1" (muted with sync) or 2 (sync mute) for each output
+	// all return strings contain "0" (not muted), "1" (muted with sync) or "2" (sync mute) for each output
 
 	// DA returns string with single space between the characters, local HDMI loop through may be the first
 	// Matrix with "A" or "B" ex CP84: "0 0 0 0 0 0" which is 1,2,3A,3B,4A,4B
@@ -700,6 +700,9 @@ func categorizeDeviceType(socketKey string, modelDescriptionResp string) string 
 		deviceType = "Scaler" // IN 16xx series
 
 	case resp == "seamless presentation switcher":
+		deviceType = "Scaler" // IN 18xx series
+
+	case resp == "seamless scaling switcher":
 		deviceType = "Scaler" // IN 18xx series
 
 	case resp == "streaming media processor":
