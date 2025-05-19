@@ -171,9 +171,8 @@ var setFunctionsMap = map[string]func(string, string, string, string, string) (s
 	"timedtriggerstate":  notImplemented, // TODO
 }
 
-// Output Maps: {Input Name : index of where to find the output in a device response string}
-
-// FIXME: should only use these when we are confident of the model.
+// Output Maps: {Input Name :
+//     index of where to find the output in a device response string,} (ex: for Video Mute)
 
 var crossPoint84Outputs = map[string]int{
 	"1":  0,
@@ -306,7 +305,7 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 
 	// all return strings contain "0" (not muted), "1" (muted with sync) or 2 (sync mute) for each output
 
-	// DA returns string with single space between the characters, local HDMI may be the first
+	// DA returns string with single space between the characters, local HDMI loop through may be the first
 	// Matrix with "A" or "B" ex CP84: "0 0 0 0 0 0" which is 1,2,3A,3B,4A,4B
 	// Scaler with loopout (IN 1808) : "0 0 0", which is 1A,1B,LoopOut
 	// Scaler with mirrored but individually-mute-controlled outs (IN 1804) : "0 0"
@@ -324,12 +323,18 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 
 	// Simple device, only one character reply
 	// Could be IN 16xx or a switcher
-	if resp == "0" {
-		return "false", nil
-	} else if resp == "1" {
-		return "true", nil
-	} else if resp == "2" { // sync mute
-		return "true", nil
+	if len(resp) == 1 {
+		if resp == "0" {
+			return "false", nil
+		} else if resp == "1" {
+			return "true", nil
+		} else if resp == "2" { // sync mute
+			return "true", nil
+		} else {
+			errMsg := function + " - invalid one character response for video mute: " + resp
+			framework.AddToErrors(socketKey, errMsg)
+			return errMsg, errors.New(errMsg)
+		}
 	}
 
 	// Query is for loop out (built for IN 1808)
@@ -376,31 +381,29 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 		}
 	}
 
-	// Setup for checking maps
-	var index int
-	found := false
-
-	// Check Output Maps
-	if deviceType == "Matrix Switcher" {
-		if idx, ok := crossPoint84Outputs[output]; ok {
-			index = idx
-			found = true
-		} else if idx, ok := crossPoint86Outputs[output]; ok {
-			index = idx
-			found = true
-		} else if idx, ok := crossPoint108Outputs[output]; ok {
-			index = idx
-			found = true
-		}
-	} else if deviceType == "Scaler" {
-		if idx, ok := in180xOutputs[output]; ok {
-			index = idx
-			found = true
-		}
+	// Matrix switchers and IN 180x
+	// We need to map the output name to the index in the response string
+	outMap := make(map[string]int)
+	if strings.Contains(deviceModels[socketKey], "DTPCP108") {
+		outMap = crossPoint108Outputs
+	} else if strings.Contains(deviceModels[socketKey], "DTPCP86") {
+		outMap = crossPoint86Outputs
+	} else if strings.Contains(deviceModels[socketKey], "DTPCP84") {
+		outMap = crossPoint84Outputs
+	} else if strings.Contains(deviceModels[socketKey], "IN18") {
+		outMap = in180xOutputs
+	} else {
+		errMsg := function + " - unknown device model: " + deviceModels[socketKey]
+		framework.AddToErrors(socketKey, errMsg)
 	}
 
-	if !found {
-		errMsg := function + " - output not found in any device map: " + output
+	// Check if output is in the map
+	var index int
+	var result string
+	if index, ok := outMap[output]; ok {
+		result = string(resp[index])
+	} else {
+		errMsg := function + " - invalid output name: " + output
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
@@ -408,9 +411,6 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 	// If we got here, we have a valid result
 
 	framework.Log(fmt.Sprintf("%s - %s - output: %s, is at index: %d of %s", function, socketKey, output, index, resp))
-
-	result := string(resp[index])
-
 	framework.Log(fmt.Sprintf("%s - %s - result: %s", function, socketKey, result))
 
 	switch result {
@@ -510,7 +510,7 @@ func telnetLoginNegotiation(socketKey string) (success bool) {
 		commas := strings.Count(negotiationResp, ",")
 		if commas == 4 { // copywright, company, model name, firmware, part number
 			modelName := strings.TrimSpace(strings.Split(negotiationResp, ",")[2])
-			framework.Log("Model name from Extron SIS device: " + modelName)
+			framework.Log(function + "- Model name: " + modelName)
 			deviceModels[socketKey] = modelName
 		} else if commas != 1 { // unexpected response (date line contains 1 comma)
 			framework.AddToErrors(socketKey, function+" - Help! does this line contain the model name? "+negotiationResp)
