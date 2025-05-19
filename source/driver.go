@@ -684,8 +684,6 @@ func categorizeDeviceType(socketKey string, modelDescriptionResp string) string 
 	deviceType := "unknown"
 
 	resp := strings.ToLower(modelDescriptionResp)
-	resp = strings.ReplaceAll(resp, " ", "")
-	resp = strings.ReplaceAll(resp, `"`, "")
 
 	// TODO: commented out items and any additional device types
 	switch {
@@ -701,10 +699,10 @@ func categorizeDeviceType(socketKey string, modelDescriptionResp string) string 
 	case strings.Contains(resp, "scaling presentation switcher"):
 		deviceType = "Scaler" // IN 16xx series
 
-	case resp == "seamless presentation switcher":
+	case strings.Contains(resp, "seamless presentation switcher"):
 		deviceType = "Scaler" // IN 18xx series
 
-	case resp == "seamless scaling switcher":
+	case strings.Contains(resp, "seamless scaling switcher"):
 		deviceType = "Scaler" // IN 18xx series
 
 	case resp == "streaming media processor":
