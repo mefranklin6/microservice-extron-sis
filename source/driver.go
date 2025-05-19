@@ -360,11 +360,42 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 		}
 	}
 
-	// DA
-	// FIXME: DTP DA's with a HDMI 'loop through' with have that output as first in the string
-	// ...this will result in an off-by-one error for these devices
+	// Distrubion Amplifier
 	if deviceType == "Distribution Amplifier" {
-		outputInt, err := strconv.Atoi(output) // TODO: add support to call 'loop through' output
+
+		// assuming Extron will not make an odd number of outputs without a loop through
+		hasLoopThrough := false
+		if isEven(len(resp)) {
+			hasLoopThrough = true
+		}
+
+		if output == "LoopThrough" && hasLoopThrough {
+			// LoopThrough is the first output in the string
+			result := string(resp[0])
+			switch result {
+			case "0":
+				return "false", nil
+			case "1":
+				return "true", nil
+			case "2":
+				return "true", nil
+			default:
+				errMsg := function + " - invalid loopthrough response: " + resp
+				framework.AddToErrors(socketKey, errMsg)
+				return errMsg, errors.New(errMsg)
+			}
+		} else if output == "LoopThrough" && !hasLoopThrough {
+			// LoopThrough is not available on this device
+			errMsg := function + " - LoopThrough not available on this device: " + resp
+			framework.AddToErrors(socketKey, errMsg)
+			return errMsg, errors.New(errMsg)
+		}
+
+		// Drop the first character (loop through)
+		if len(resp) > 0 {
+			resp = resp[1:]
+		}
+		outputInt, err := strconv.Atoi(output)
 		if err != nil {
 			errMsg := function + " - invalid output number: " + output
 			framework.AddToErrors(socketKey, errMsg)
@@ -477,6 +508,10 @@ func setAudioAndVideoRoute(socketKey string, endpoint string, input string, outp
 ///////////////////////////////////////////////////////////////////////////////
 // Helper functions //
 ///////////////////////////////////////////////////////////////////////////////
+
+func isEven(n int) bool {
+	return n%2 == 0
+}
 
 // Placeholder for not implemented functions
 func notImplemented(socketKey string, endpoint string, _ string, _ string, _ string) (string, error) {
