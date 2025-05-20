@@ -75,6 +75,9 @@ var internalGetCmdMap = map[string]map[string]string{
 		"Switcher":               "B\r",
 		"Distribution Amplifier": "B\r",
 	},
+	"matrixmute": {
+		"Audio Processor": "\x1BM%sAU\r",
+	},
 
 	//"viewvideoinput":          "&\r",       // non-matrix
 	//"viewcurrentinput":        "!\r",       // non-matrix
