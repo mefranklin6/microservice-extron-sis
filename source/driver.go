@@ -420,7 +420,7 @@ func notImplemented(socketKey string, endpoint string, _ string, _ string, _ str
 
 // Internal: acts as a router to the sub-helper functions for calculating DMP mix points
 func calculateDmpMixPointNumber(input, output string) (string, error) {
-	//function := "calculateDmpMixPointNumber"
+	function := "calculateDmpMixPointNumber"
 
 	var prefix string
 	var mixPointNum string
@@ -434,9 +434,60 @@ func calculateDmpMixPointNumber(input, output string) (string, error) {
 		if err != nil {
 			return "", err
 		}
+	case strings.HasPrefix(input, "VRetToOut"):
+		prefix = "VRetToOut"
+		input = strings.TrimPrefix(input, prefix)
+		mixPointNum, err = virtualReturnToOutput(input, output)
+		if err != nil {
+			return "", err
+		}
+	case strings.HasPrefix(input, "EXPInToOut"):
+		prefix = "EXPInToOut"
+		input = strings.TrimPrefix(input, prefix)
+		mixPointNum, err = eXPInputToOutput(input, output)
+		if err != nil {
+			return "", err
+		}
+	case strings.HasPrefix(input, "MicToSend"):
+		prefix = "MicToSend"
+		input = strings.TrimPrefix(input, prefix)
+		mixPointNum, err = micInputToVirtualSend(input, output)
+		if err != nil {
+			return "", err
+		}
+	case strings.HasPrefix(input, "VRetToSend"):
+		prefix = "VRetToSend"
+		input = strings.TrimPrefix(input, prefix)
+		mixPointNum, err = virtualReturnToVirtualSend(input, output)
+		if err != nil {
+			return "", err
+		}
+	case strings.HasPrefix(input, "EXPInToSend"):
+		prefix = "EXPInToSend"
+		input = strings.TrimPrefix(input, prefix)
+		mixPointNum, err = eXPInputToVirtualSend(input, output)
+		if err != nil {
+			return "", err
+		}
+	case strings.HasPrefix(input, "MicToEXPOut"):
+		prefix = "MicToEXPOut"
+		input = strings.TrimPrefix(input, prefix)
+		mixPointNum, err = micInputToEXPOutput(input, output)
+		if err != nil {
+			return "", err
+		}
+	case strings.HasPrefix(input, "VRetToEXPOut"):
+		prefix = "VRetToEXPOut"
+		input = strings.TrimPrefix(input, prefix)
+		mixPointNum, err = virtualReturnToEXPOutput(input, output)
+		if err != nil {
+			return "", err
+		}
+	default:
+		errMsg := fmt.Sprintf(function+" - unknown input type: %s", input)
+		return "", errors.New(errMsg)
 	}
 	return mixPointNum, nil
-
 }
 
 // Internal: calculates the mix-point number for the DMP
@@ -477,8 +528,8 @@ func micInputToOutputNumber(input, output string) (string, error) {
 	return res, nil
 }
 
-// VirtualReturnToOutput returns Table 4 mix-point: Virtual Return A-H → Line out
-func VirtualReturnToOutput(vret, output string) (string, error) {
+// virtualReturnToOutput returns Table 4 mix-point: Virtual Return A-H → Line out
+func virtualReturnToOutput(vret, output string) (string, error) {
 	// Convert vret to a rune and validate it
 	if len(vret) != 1 {
 		return "", fmt.Errorf("return A-H expected, got %s", vret)
@@ -501,8 +552,8 @@ func VirtualReturnToOutput(vret, output string) (string, error) {
 	return dmpCalc(VRetToOut, int(vretRune-'A'), outputInt-1)
 }
 
-// EXPInputToOutput returns Table 5 mix-point: EXP input → Line out
-func EXPInputToOutput(expIn, output string) (string, error) {
+// eXPInputToOutput returns Table 5 mix-point: EXP input → Line out
+func eXPInputToOutput(expIn, output string) (string, error) {
 	// Convert expIn and output to integers
 	expInInt, err := strconv.Atoi(expIn)
 	if err != nil {
@@ -517,8 +568,8 @@ func EXPInputToOutput(expIn, output string) (string, error) {
 	return dmpCalc(EXPInToOut, expInInt-1, outputInt-1)
 }
 
-// MicInputToVirtualSend returns Table 6 mix-point: Mic/Line input → Send A-H
-func MicInputToVirtualSend(input string, send string) (string, error) {
+// micInputToVirtualSend returns Table 6 mix-point: Mic/Line input → Send A-H
+func micInputToVirtualSend(input string, send string) (string, error) {
 	// Convert input to an integer
 	inputInt, err := strconv.Atoi(input)
 	if err != nil {
@@ -538,8 +589,8 @@ func MicInputToVirtualSend(input string, send string) (string, error) {
 	return dmpCalc(MicToSend, inputInt-1, int(sendRune-'A'))
 }
 
-// VirtualReturnToVirtualSend returns Table 7 mix-point: Virtual Return A-H → Send A-H
-func VirtualReturnToVirtualSend(vret, send string) (string, error) {
+// virtualReturnToVirtualSend returns Table 7 mix-point: Virtual Return A-H → Send A-H
+func virtualReturnToVirtualSend(vret, send string) (string, error) {
 	// Convert vret to a rune and validate it
 	if len(vret) != 1 {
 		return "", fmt.Errorf("return A-H expected, got %s", vret)
@@ -562,8 +613,8 @@ func VirtualReturnToVirtualSend(vret, send string) (string, error) {
 	return dmpCalc(VRetToSend, int(vretRune-'A'), int(sendRune-'A'))
 }
 
-// EXPInputToVirtualSend returns Table 8 mix-point: EXP input → Send A-H
-func EXPInputToVirtualSend(expIn string, send string) (string, error) {
+// eXPInputToVirtualSend returns Table 8 mix-point: EXP input → Send A-H
+func eXPInputToVirtualSend(expIn string, send string) (string, error) {
 	// Convert expIn to an integer
 	expInInt, err := strconv.Atoi(expIn)
 	if err != nil {
@@ -583,8 +634,8 @@ func EXPInputToVirtualSend(expIn string, send string) (string, error) {
 	return dmpCalc(EXPInToSend, expInInt-1, int(sendRune-'A'))
 }
 
-// MicInputToEXPOutput returns Table 9 mix-point: Mic/Line input → EXP out
-func MicInputToEXPOutput(input, expOut string) (string, error) {
+// micInputToEXPOutput returns Table 9 mix-point: Mic/Line input → EXP out
+func micInputToEXPOutput(input, expOut string) (string, error) {
 	// Convert input and expOut to integers
 	inputInt, err := strconv.Atoi(input)
 	if err != nil {
@@ -599,8 +650,8 @@ func MicInputToEXPOutput(input, expOut string) (string, error) {
 	return dmpCalc(MicToEXPOut, inputInt-1, expOutInt-1)
 }
 
-// VirtualReturnToEXPOutput returns Table 10 mix-point: Virtual Return A-H → EXP out
-func VirtualReturnToEXPOutput(vret, expOut string) (string, error) {
+// virtualReturnToEXPOutput returns Table 10 mix-point: Virtual Return A-H → EXP out
+func virtualReturnToEXPOutput(vret, expOut string) (string, error) {
 	// Convert vret to a rune and validate it
 	if len(vret) != 1 {
 		return "", fmt.Errorf("return A-H expected, got %s", vret)
