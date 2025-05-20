@@ -419,22 +419,22 @@ func notImplemented(socketKey string, endpoint string, _ string, _ string, _ str
 // Valid input formats:
 // "Mic/Line Input 1", "Virtural Return A", "EXP Input 1"
 // Valid output formats: the output number (ex: "1")
-// Ex: Input: "Mic/Line Input 3", Output: "8" -> Mix Point 20007
+// Ex: Input: "MicLine Input 3", Output: "8" -> Mix Point 20007
 func calculateDmpMixPointNumber(input, output string) (string, error) {
 	//function := "calculateDmpMixPointNumber"
 
 	var baseValue int
 	var inputPrefix string
 	switch {
-	case strings.Contains(input, "Mic/Line Input"):
-		baseValue = dMPMixPointBaseValues["Mic/Line Input"]
-		inputPrefix = "Mic/Line Input "
-	case strings.Contains(input, "Virtual Return"):
-		baseValue = dMPMixPointBaseValues["Virtual Return"]
-		inputPrefix = "Virtual Return "
-	case strings.Contains(input, "EXP Input"):
-		baseValue = dMPMixPointBaseValues["EXP Input"]
-		inputPrefix = "EXP Input "
+	case strings.Contains(input, "miclineinput"):
+		baseValue = dMPMixPointBaseValues["miclineinput"]
+		inputPrefix = "miclineinput"
+	case strings.Contains(input, "virtualreturn"):
+		baseValue = dMPMixPointBaseValues["virtualreturn"]
+		inputPrefix = "virtualreturn"
+	case strings.Contains(input, "expinput"):
+		baseValue = dMPMixPointBaseValues["expinput"]
+		inputPrefix = "expinput"
 	}
 
 	// Extract input number from the input

@@ -215,7 +215,7 @@ var in180xOutputs = map[string]int{
 }
 
 var dMPMixPointBaseValues = map[string]int{
-	"Mic/Line Input": 20000,
-	"Virtual Return": 21000,
-	"EXP Input":      22000, // 22000-27607 on DMP128
+	"miclineinput":  20000,
+	"virtualreturn": 21000,
+	"expinput":      22000, // 22000-27607 on DMP128
 }
