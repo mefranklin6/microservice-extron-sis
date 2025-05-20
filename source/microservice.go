@@ -22,9 +22,9 @@ func setFrameworkGlobals() {
 }
 
 // Package-level tunables
-var keepAlivePollingInterval = 5 * time.Second // default : 5 seconds
-var keepAliveCmd = "Q\r"                       // default : "Q\r" (firmware version)
-var maintenancePeriod = struct {               // lets the connection drop during this period, daily
+var keepAlivePollingInterval = 60 * time.Second // default : 60 seconds
+var keepAliveCmd = "Q\r"                        // default : "Q\r" (firmware version)
+var maintenancePeriod = struct {                // lets the connection drop during this period, daily
 	Start time.Time
 	End   time.Time
 }{

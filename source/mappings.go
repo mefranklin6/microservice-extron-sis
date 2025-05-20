@@ -217,8 +217,33 @@ var in180xOutputs = map[string]int{
 	"1B": 1,
 }
 
-var dMPMixPointBaseValues = map[string]int{
-	"miclineinput":  20000,
-	"virtualreturn": 21000,
-	"expinput":      22000, // 22000-27607 on DMP128
+// DMP Maths
+
+type TableKey string
+
+const (
+	// Output-mix matrices (Tables 3-5)
+	MicToOut   TableKey = "MicToOut"   // Table 3 – Mic/Line → Line Out
+	VRetToOut  TableKey = "VRetToOut"  // Table 4 – Virtual Return → Line Out
+	EXPInToOut TableKey = "EXPInToOut" // Table 5 – EXP In → Line Out
+
+	// Virtual-send matrices (Tables 6-8)
+	MicToSend   TableKey = "MicToSend"   // Table 6 – Mic/Line → Virtual Send
+	VRetToSend  TableKey = "VRetToSend"  // Table 7 – Virtual Return → Virtual Send
+	EXPInToSend TableKey = "EXPInToSend" // Table 8 – EXP In → Virtual Send
+
+	// EXP-output matrices (Tables 9-10)
+	MicToEXPOut  TableKey = "MicToEXPOut"  // Table 9 – Mic/Line → EXP Out
+	VRetToEXPOut TableKey = "VRetToEXPOut" // Table 10 – Virtual Return → EXP Out
+)
+
+var baseAddr = map[TableKey]int{
+	MicToOut:     20000, // Table 3
+	VRetToOut:    21300, // Table 4
+	EXPInToOut:   22100, // Table 5
+	MicToSend:    20009, // Table 6
+	VRetToSend:   21309, // Table 7
+	EXPInToSend:  22109, // Table 8
+	MicToEXPOut:  20018, // Table 9
+	VRetToEXPOut: 21317, // Table 10
 }

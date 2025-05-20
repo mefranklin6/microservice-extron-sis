@@ -416,47 +416,211 @@ func notImplemented(socketKey string, endpoint string, _ string, _ string, _ str
 	return "", errors.New(errMsg)
 }
 
-// Internal: Translate DMP input names and output numbers to mix point numbers
-// Valid input formats:
-// "Mic/Line Input 1", "Virtural Return A", "EXP Input 1"
-// Valid output formats: the output number (ex: "1")
-// Ex: Input: "MicLine Input 3", Output: "8" -> Mix Point 20007
+//////////////////////////////////////////
+
+// Internal: acts as a router to the sub-helper functions for calculating DMP mix points
 func calculateDmpMixPointNumber(input, output string) (string, error) {
 	//function := "calculateDmpMixPointNumber"
 
-	var baseValue int
-	var inputPrefix string
+	var prefix string
+	var mixPointNum string
+	var err error
+
 	switch {
-	case strings.Contains(input, "miclineinput"):
-		baseValue = dMPMixPointBaseValues["miclineinput"]
-		inputPrefix = "miclineinput"
-	case strings.Contains(input, "virtualreturn"):
-		baseValue = dMPMixPointBaseValues["virtualreturn"]
-		inputPrefix = "virtualreturn"
-	case strings.Contains(input, "expinput"):
-		baseValue = dMPMixPointBaseValues["expinput"]
-		inputPrefix = "expinput"
+	case strings.HasPrefix(input, "MicToOut"):
+		prefix = "MicToOut"
+		input = strings.TrimPrefix(input, prefix)
+		mixPointNum, err = micInputToOutputNumber(input, output)
+		if err != nil {
+			return "", err
+		}
+	}
+	return mixPointNum, nil
+
+}
+
+// Internal: calculates the mix-point number for the DMP
+func dmpCalc(table TableKey, row int, col int) (string, error) {
+	// get the base address for the table
+	base, ok := baseAddr[table]
+	if !ok {
+		return "", fmt.Errorf("unknown table key %s", table)
 	}
 
-	// Extract input number from the input
-	// FIXME: Virtual returns use letters
-	inputStr := strings.TrimPrefix(input, inputPrefix)
-	inputNum, err := strconv.Atoi(inputStr)
+	// apply the DMP mix-point formula
+	intResult := base + 100*row + col
+
+	// convert back to string
+	strResult := strconv.Itoa(intResult)
+	if strResult == "" {
+		return "", fmt.Errorf("input %s, output %s not supported", row, col)
+	}
+	return strResult, nil
+}
+
+// MicInputToOutput returns Table 3 mix-point: Mic/Line input → Line out
+func micInputToOutputNumber(input, output string) (string, error) {
+	inputInt, err := strconv.Atoi(input)
 	if err != nil {
-		return "", fmt.Errorf("invalid input format: %s", input)
+		return "", fmt.Errorf("input %s is not a number", input)
 	}
-
-	// Convert output to integer
 	outputInt, err := strconv.Atoi(output)
 	if err != nil {
-		return "", fmt.Errorf("invalid output format: %s", output)
+		return "", fmt.Errorf("output %s is not a number", output)
 	}
 
-	res := baseValue + ((inputNum - 1) * 100) + (outputInt - 1)
-	resStr := strconv.Itoa(res)
-	framework.Log(fmt.Sprintf("getDmpMixPoint - input: %s, output: %s, result: %s", input, output, resStr))
-	return resStr, nil
+	res, err := dmpCalc(MicToOut, inputInt-1, outputInt-1)
+	if err != nil {
+		return "", fmt.Errorf("error calculating mix-point: %s", err)
+	}
+
+	return res, nil
 }
+
+// VirtualReturnToOutput returns Table 4 mix-point: Virtual Return A-H → Line out
+func VirtualReturnToOutput(vret, output string) (string, error) {
+	// Convert vret to a rune and validate it
+	if len(vret) != 1 {
+		return "", fmt.Errorf("return A-H expected, got %s", vret)
+	}
+	vretRune := rune(vret[0])
+	if vretRune < 'A' || vretRune > 'H' {
+		return "", fmt.Errorf("return A-H expected, got %c", vretRune)
+	}
+
+	// Convert output to an integer and validate it
+	outputInt, err := strconv.Atoi(output)
+	if err != nil {
+		return "", fmt.Errorf("output %s is not a valid number", output)
+	}
+	if outputInt < 1 {
+		return "", fmt.Errorf("output must be at least 1, got %d", outputInt)
+	}
+
+	// Perform the mix-point calculation
+	return dmpCalc(VRetToOut, int(vretRune-'A'), outputInt-1)
+}
+
+// EXPInputToOutput returns Table 5 mix-point: EXP input → Line out
+func EXPInputToOutput(expIn, output string) (string, error) {
+	// Convert expIn and output to integers
+	expInInt, err := strconv.Atoi(expIn)
+	if err != nil {
+		return "", fmt.Errorf("input %s is not a valid number", expIn)
+	}
+	outputInt, err := strconv.Atoi(output)
+	if err != nil {
+		return "", fmt.Errorf("output %s is not a valid number", output)
+	}
+
+	// Perform the mix-point calculation
+	return dmpCalc(EXPInToOut, expInInt-1, outputInt-1)
+}
+
+// MicInputToVirtualSend returns Table 6 mix-point: Mic/Line input → Send A-H
+func MicInputToVirtualSend(input string, send string) (string, error) {
+	// Convert input to an integer
+	inputInt, err := strconv.Atoi(input)
+	if err != nil {
+		return "", fmt.Errorf("input %s is not a valid number", input)
+	}
+
+	// Convert send to a rune and validate it
+	if len(send) != 1 {
+		return "", fmt.Errorf("send A-H expected, got %s", send)
+	}
+	sendRune := rune(send[0])
+	if sendRune < 'A' || sendRune > 'H' {
+		return "", fmt.Errorf("send A-H expected, got %c", sendRune)
+	}
+
+	// Perform the mix-point calculation
+	return dmpCalc(MicToSend, inputInt-1, int(sendRune-'A'))
+}
+
+// VirtualReturnToVirtualSend returns Table 7 mix-point: Virtual Return A-H → Send A-H
+func VirtualReturnToVirtualSend(vret, send string) (string, error) {
+	// Convert vret to a rune and validate it
+	if len(vret) != 1 {
+		return "", fmt.Errorf("return A-H expected, got %s", vret)
+	}
+	vretRune := rune(vret[0])
+	if vretRune < 'A' || vretRune > 'H' {
+		return "", fmt.Errorf("return A-H expected, got %c", vretRune)
+	}
+
+	// Convert send to a rune and validate it
+	if len(send) != 1 {
+		return "", fmt.Errorf("send A-H expected, got %s", send)
+	}
+	sendRune := rune(send[0])
+	if sendRune < 'A' || sendRune > 'H' {
+		return "", fmt.Errorf("send A-H expected, got %c", sendRune)
+	}
+
+	// Perform the mix-point calculation
+	return dmpCalc(VRetToSend, int(vretRune-'A'), int(sendRune-'A'))
+}
+
+// EXPInputToVirtualSend returns Table 8 mix-point: EXP input → Send A-H
+func EXPInputToVirtualSend(expIn string, send string) (string, error) {
+	// Convert expIn to an integer
+	expInInt, err := strconv.Atoi(expIn)
+	if err != nil {
+		return "", fmt.Errorf("input %s is not a valid number", expIn)
+	}
+
+	// Convert send to a rune and validate it
+	if len(send) != 1 {
+		return "", fmt.Errorf("send A-H expected, got %s", send)
+	}
+	sendRune := rune(send[0])
+	if sendRune < 'A' || sendRune > 'H' {
+		return "", fmt.Errorf("send A-H expected, got %c", sendRune)
+	}
+
+	// Perform the mix-point calculation
+	return dmpCalc(EXPInToSend, expInInt-1, int(sendRune-'A'))
+}
+
+// MicInputToEXPOutput returns Table 9 mix-point: Mic/Line input → EXP out
+func MicInputToEXPOutput(input, expOut string) (string, error) {
+	// Convert input and expOut to integers
+	inputInt, err := strconv.Atoi(input)
+	if err != nil {
+		return "", fmt.Errorf("input %s is not a valid number", input)
+	}
+	expOutInt, err := strconv.Atoi(expOut)
+	if err != nil {
+		return "", fmt.Errorf("output %s is not a valid number", expOut)
+	}
+
+	// Perform the mix-point calculation
+	return dmpCalc(MicToEXPOut, inputInt-1, expOutInt-1)
+}
+
+// VirtualReturnToEXPOutput returns Table 10 mix-point: Virtual Return A-H → EXP out
+func VirtualReturnToEXPOutput(vret, expOut string) (string, error) {
+	// Convert vret to a rune and validate it
+	if len(vret) != 1 {
+		return "", fmt.Errorf("return A-H expected, got %s", vret)
+	}
+	vretRune := rune(vret[0])
+	if vretRune < 'A' || vretRune > 'H' {
+		return "", fmt.Errorf("return A-H expected, got %c", vretRune)
+	}
+
+	// Convert expOut to an integer
+	expOutInt, err := strconv.Atoi(expOut)
+	if err != nil {
+		return "", fmt.Errorf("output %s is not a valid number", expOut)
+	}
+
+	// Perform the mix-point calculation
+	return dmpCalc(VRetToEXPOut, int(vretRune-'A'), expOutInt-1)
+}
+
+////////////////////////////////////
 
 // Internal
 func telnetLoginNegotiation(socketKey string) (success bool) {
