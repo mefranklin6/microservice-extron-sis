@@ -279,6 +279,7 @@ func getMatrixMuteDo(socketKey string, endpoint string, input string, output str
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
+	resp = strings.ReplaceAll(resp, `"`, ``)
 	if resp == "1" {
 		return "true", nil
 	} else if resp == "0" {
