@@ -493,7 +493,7 @@ func calculateDmpMixPointNumber(input, output string) (string, error) {
 // Internal: calculates the mix-point number for the DMP
 func dmpCalc(table TableKey, row int, col int) (string, error) {
 	// get the base address for the table
-	base, ok := baseAddr[table]
+	base, ok := dmpBaseAddr[table]
 	if !ok {
 		return "", fmt.Errorf("unknown table key %s", table)
 	}

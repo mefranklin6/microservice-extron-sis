@@ -237,7 +237,8 @@ const (
 	VRetToEXPOut TableKey = "VRetToEXPOut" // Table 10 – Virtual Return → EXP Out
 )
 
-var baseAddr = map[TableKey]int{
+// Base addresses for DMP matrix tables
+var dmpBaseAddr = map[TableKey]int{
 	MicToOut:     20000, // Table 3
 	VRetToOut:    21300, // Table 4
 	EXPInToOut:   22100, // Table 5
