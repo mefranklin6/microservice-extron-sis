@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/mefranklin6/microservice-framework/framework" // Change after PR#4 for Dartmouth
+	"github.com/Dartmouth-OpenAV/microservice-framework/framework"
 )
 
 func setFrameworkGlobals() {

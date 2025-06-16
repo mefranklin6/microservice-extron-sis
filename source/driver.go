@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mefranklin6/microservice-framework/framework" // Change after PR#4 for Dartmouth
+	"github.com/Dartmouth-OpenAV/microservice-framework/framework"
 )
 
 // Package-level variables
@@ -971,7 +971,6 @@ func deviceTypeDependantCommand(socketKey string, endpoint string, method string
 		return errMsg, errors.New(errMsg)
 	}
 
-	cmdString := ""
 	var cmdMap map[string]map[string]string
 	if method == "GET" {
 		cmdMap = internalGetCmdMap
@@ -982,7 +981,14 @@ func deviceTypeDependantCommand(socketKey string, endpoint string, method string
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
-	cmdString = formatCommand(cmdMap[endpoint][deviceType], arg1, arg2, arg3)
+
+	cmdTemplate := cmdMap[endpoint][deviceType]
+
+	framework.Log(fmt.Sprintf("%s - Command template: %s", function, cmdTemplate))
+	framework.Log(fmt.Sprintf("%s - Args before formatting: arg1=%s, arg2=%s, arg3=%s", function, arg1, arg2, arg3))
+
+	cmdString := ""
+	cmdString = formatCommand(cmdTemplate, arg1, arg2, arg3)
 
 	if cmdString == "" {
 		errMsg := fmt.Sprintf(function+" - 8deoi - no command found for device type: %s", deviceType)
