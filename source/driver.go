@@ -72,6 +72,10 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 		starIndx := strings.Index(resp, "*")
 		if starIndx == len(resp)-2 {
 			resp = resp[:2] // trim output and "*"
+		} else {
+			errMsg := function + " - invalid response for switcher input status: " + resp
+			framework.AddToErrors(socketKey, errMsg)
+			return errMsg, errors.New(errMsg)
 		}
 	}
 
@@ -101,6 +105,10 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 		result = "true"
 	} else if result == "0" {
 		result = "false"
+	} else {
+		errMsg := function + " - invalid response for input status: " + resp
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
 	}
 
 	return result, nil
