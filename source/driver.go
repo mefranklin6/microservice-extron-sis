@@ -55,7 +55,7 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 	// switcher will return backwards DA, ex: "1 0 1 0*0" (output is last)
 
 	// handle Distribution Amplifier (one input only)
-	if strings.Count(resp, "*") == 1 && string(resp[1]) == "*" && len(resp) > 1 && (string(resp[0]) == "1" || string(resp[0]) == "0") {
+	if strings.Count(resp, "*") == 1 && len(resp) >= 2 && string(resp[1]) == "*" && (string(resp[0]) == "1" || string(resp[0]) == "0") {
 		input := string(resp[0])
 		if input == "1" {
 			return "true", nil
@@ -466,9 +466,10 @@ func stringIntToStringBool(socketKey string, input string) (string, error) {
 		result = "false"
 	} else {
 		errMsg = function + " - can't cast to 'True' or 'False': " + input
+		return "", errors.New(errMsg)
 	}
 
-	return result, errors.New(errMsg)
+	return result, nil
 }
 
 //////////////////////////////////////////
