@@ -75,8 +75,6 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 		if starIndx == len(resp)-2 {
 			resp = resp[:len(resp)-2]                // remove the star and output
 			resp = strings.ReplaceAll(resp, " ", "") // remove spaces
-			fmt.Println("Trimmed swicher response: ", resp)
-			fmt.Println("Length of response: ", len(resp))
 		} else {
 			errMsg := function + " - invalid response for switcher input status: " + resp
 			framework.AddToErrors(socketKey, errMsg)
@@ -84,7 +82,7 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 		}
 	}
 
-	// Remove any matrix formatting
+	// Remove any matrix formatting (this is also valid path for switchers)
 	resp = strings.ReplaceAll(resp, `*`, ``)
 
 	deviceModel := deviceModels[socketKey]
@@ -102,6 +100,7 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 		inMap = in180xMap.inputs
 	default:
 		// If we got here, hopefully it's a device with a straight 1:1 mapping (ex: no '3A', just '3')
+		framework.Log(function + " - no special I/O name handling applied for device: " + deviceModel + "at" + socketKey)
 		inputNum, err := strconv.Atoi(input)
 		if err != nil {
 			errMsg := function + " - invalid input number: " + input
@@ -124,13 +123,14 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 		return result, nil
 	}
 
+	// If we got here, we have a device that has a mapping for inputs (Ex: 3A is index 2, 3B is index 3)
 	// Check if input is in the map
 	var index int
 	var ok bool
 	if index, ok = inMap[input]; ok {
 		result := string(resp[index])
-		framework.Log(fmt.Sprintf("%s - %s - input: %s, is at index: %d of %s", function, socketKey, input, index, resp))
-		framework.Log(fmt.Sprintf("%s - %s - result: %s", function, socketKey, result))
+		//framework.Log(fmt.Sprintf("%s - %s - input: %s, is at index: %d of %s", function, socketKey, input, index, resp))
+		//framework.Log(fmt.Sprintf("%s - %s - result: %s", function, socketKey, result))
 		return stringIntToStringBool(socketKey, result)
 	} else {
 		errMsg := function + " - invalid input name: " + input
@@ -206,7 +206,7 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 		}
 	}
 
-	// Distrubion Amplifier
+	// Distribution Amplifier
 	if deviceType == "Distribution Amplifier" {
 
 		// assuming Extron will not make an odd number of outputs without a loop through
@@ -261,17 +261,21 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 	// Matrix switchers and IN 180x
 	// We need to map the output name to the index in the response string
 	outMap := make(map[string]int)
-	if strings.Contains(deviceModels[socketKey], "DTPCP108") {
+	deviceModel := deviceModels[socketKey]
+
+	switch {
+	case strings.Contains(deviceModel, "DTPCP108"):
 		outMap = crossPoint108Map.outputs
-	} else if strings.Contains(deviceModels[socketKey], "DTPCP86") {
+	case strings.Contains(deviceModel, "DTPCP86"):
 		outMap = crossPoint86Map.outputs
-	} else if strings.Contains(deviceModels[socketKey], "DTPCP84") {
+	case strings.Contains(deviceModel, "DTPCP84"):
 		outMap = crossPoint84Map.outputs
-	} else if strings.Contains(deviceModels[socketKey], "IN18") {
+	case strings.Contains(deviceModel, "IN18"):
 		outMap = in180xMap.outputs
-	} else {
+	default:
 		errMsg := function + " - unknown device model: " + deviceModels[socketKey]
 		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
 	}
 
 	// Check if output is in the map
@@ -288,8 +292,8 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 
 	// If we got here, we have a valid result
 
-	framework.Log(fmt.Sprintf("%s - %s - output: %s, is at index: %d of %s", function, socketKey, output, index, resp))
-	framework.Log(fmt.Sprintf("%s - %s - result: %s", function, socketKey, result))
+	//framework.Log(fmt.Sprintf("%s - %s - output: %s, is at index: %d of %s", function, socketKey, output, index, resp))
+	//framework.Log(fmt.Sprintf("%s - %s - result: %s", function, socketKey, result))
 
 	result, err = stringIntToStringBool(socketKey, result)
 	if err != nil {
@@ -952,7 +956,6 @@ func startKeepAlivePoll(socketKey string, interval time.Duration, keepAliveCmd s
 
 	// Check if already running
 	if _, exists := keepAlivePollRoutines[socketKey]; exists {
-		framework.Log(fmt.Sprintf("%s - already running for %s", function, socketKey))
 		return nil
 	}
 
