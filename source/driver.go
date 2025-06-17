@@ -69,9 +69,10 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 
 	// Switcher ("*" should be second to last character)
 	if strings.Count(resp, "*") == 1 {
+		resp = strings.ReplaceAll(resp, `"`, ``)
 		starIndx := strings.Index(resp, "*")
-		if starIndx == len(resp)-3 {
-			resp = resp[len(resp)-3:]      // remove the star, output, and carriage return
+		if starIndx == len(resp)-2 {
+			resp = resp[:len(resp)-2]      // remove the star and output
 			resp = strings.TrimSpace(resp) // remove any leading/trailing spaces
 			fmt.Println("Switcher input status response: ", resp)
 			fmt.Println("Switcher input status response length: ", len(resp))
