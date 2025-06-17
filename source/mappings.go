@@ -186,46 +186,100 @@ var setFunctionsMap = map[string]func(string, string, string, string, string) (s
 	"timedtriggerstate":  notImplemented, // TODO
 }
 
-// Output Maps: {Input Name :
-//     index of where to find the output in a device response string,} (ex: for Video Mute)
-
-var crossPoint84Outputs = map[string]int{
-	"1":  0,
-	"2":  1,
-	"3A": 2,
-	"3B": 3,
-	"4A": 4,
-	"4B": 5,
+// Input or Output Names : Index of where to find them in string returns (ex: video mute)
+type videoIO_Map struct {
+	inputs  map[string]int
+	outputs map[string]int
 }
 
-var crossPoint86Outputs = map[string]int{
-	"1":  0,
-	"2":  1,
-	"3A": 2,
-	"3B": 3,
-	"4A": 4,
-	"4B": 5,
-	"5":  6,
-	"6":  7,
+var crossPoint84Map = videoIO_Map{
+	inputs: map[string]int{
+		"1": 0,
+		"2": 1,
+		"3": 2,
+		"4": 3,
+		"5": 4,
+		"6": 5,
+		"7": 6,
+		"8": 7,
+	},
+	outputs: map[string]int{
+		"1":  0,
+		"2":  1,
+		"3A": 2,
+		"3B": 3,
+		"4A": 4,
+		"4B": 5,
+	},
 }
 
-var crossPoint108Outputs = map[string]int{
-	"1":  0,
-	"2":  1,
-	"3":  2,
-	"4":  3,
-	"5A": 4,
-	"5B": 5,
-	"6A": 6,
-	"6B": 7,
-	"7":  8,
-	"8":  9,
+var crossPoint86Map = videoIO_Map{
+	inputs: map[string]int{
+		"1": 0,
+		"2": 1,
+		"3": 2,
+		"4": 3,
+		"5": 4,
+		"6": 5,
+		"7": 6,
+		"8": 7,
+	},
+	outputs: map[string]int{
+		"1":  0,
+		"2":  1,
+		"3A": 2,
+		"3B": 3,
+		"4A": 4,
+		"4B": 5,
+		"5":  6,
+		"6":  7,
+	},
+}
+
+var crossPoint108Map = videoIO_Map{
+	inputs: map[string]int{
+		"1":  0,
+		"2":  1,
+		"3":  2,
+		"4":  3,
+		"5":  4,
+		"6":  5,
+		"7":  6,
+		"8":  7,
+		"9":  8,
+		"10": 9,
+	},
+	outputs: map[string]int{
+		"1":  0,
+		"2":  1,
+		"3":  2,
+		"4":  3,
+		"5A": 4,
+		"5B": 5,
+		"6A": 6,
+		"6B": 7,
+		"7":  8,
+		"8":  9,
+	},
 }
 
 // LoopOut is handled as a special case
-var in180xOutputs = map[string]int{
-	"1A": 0,
-	"1B": 1,
+var in180xMap = videoIO_Map{
+	inputs: map[string]int{
+		"1": 0,
+		"2": 1,
+		"3": 2,
+		"4": 3,
+		"5": 4,
+		"6": 5,
+		"7": 6,
+		"8": 7,
+	},
+	outputs: map[string]int{
+		"1A": 0,
+		"1B": 1,
+		// LoopOut is not in the map, it is handled separately
+	},
 }
 
 // DMP Maths

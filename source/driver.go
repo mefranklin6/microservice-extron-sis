@@ -87,36 +87,52 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 	// Remove any matrix formatting
 	resp = strings.ReplaceAll(resp, `*`, ``)
 
-	// cast the input string to an integer
-	// FIXME: need crosspoint mapping ex: 3A
-	inputNum, err := strconv.Atoi(input)
-	if err != nil {
-		errMsg := function + " - invalid input number: " + input
-		framework.AddToErrors(socketKey, errMsg)
-		return errMsg, errors.New(errMsg)
-	}
-
-	// Check if index is in bounds
-	if inputNum < 1 || inputNum > len(resp) {
-		errMsg := function + " - input number out of range: " + input
-		framework.AddToErrors(socketKey, errMsg)
-		return errMsg, errors.New(errMsg)
-	}
-	// Extract the single character
-	result := string(resp[inputNum-1])
-
-	// 'cast' result to 'bool' (still a string)
-	if result == "1" {
-		result = "true"
-	} else if result == "0" {
-		result = "false"
+	inMap := make(map[string]int)
+	if strings.Contains(deviceModels[socketKey], "DTPCP108") {
+		inMap = crossPoint108Map.inputs
+	} else if strings.Contains(deviceModels[socketKey], "DTPCP86") {
+		inMap = crossPoint86Map.inputs
+	} else if strings.Contains(deviceModels[socketKey], "DTPCP84") {
+		inMap = crossPoint84Map.inputs
+	} else if strings.Contains(deviceModels[socketKey], "IN18") {
+		inMap = in180xMap.inputs
 	} else {
-		errMsg := function + " - invalid response for input status: " + resp
+		// If we got here, hopefully it's a device with a straight 1:1 mapping (ex: no '3A', just '3')
+		inputNum, err := strconv.Atoi(input)
+		if err != nil {
+			errMsg := function + " - invalid input number: " + input
+			framework.AddToErrors(socketKey, errMsg)
+			return errMsg, errors.New(errMsg)
+		}
+		// Check if index is in bounds
+		if inputNum < 1 || inputNum > len(resp) {
+			errMsg := function + " - input number out of range: " + input
+			framework.AddToErrors(socketKey, errMsg)
+			return errMsg, errors.New(errMsg)
+		}
+		// Extract the single character
+		singleCharResult := string(resp[inputNum-1])
+		result, err := stringIntToStringBool(socketKey, singleCharResult)
+		if err != nil {
+			errMsg := function + " - error converting input status to boolean: " + err.Error()
+			framework.AddToErrors(socketKey, errMsg)
+			return errMsg, errors.New(errMsg)
+		}
+		return result, nil
+	}
+	// Check if input is in the map
+	var index int
+	var ok bool
+	if index, ok = inMap[input]; ok {
+		result := string(resp[index])
+		framework.Log(fmt.Sprintf("%s - %s - input: %s, is at index: %d of %s", function, socketKey, input, index, resp))
+		framework.Log(fmt.Sprintf("%s - %s - result: %s", function, socketKey, result))
+		return stringIntToStringBool(socketKey, result)
+	} else {
+		errMsg := function + " - invalid input name: " + input
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
-
-	return result, nil
 }
 
 func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, _ string) (string, error) {
@@ -242,13 +258,13 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 	// We need to map the output name to the index in the response string
 	outMap := make(map[string]int)
 	if strings.Contains(deviceModels[socketKey], "DTPCP108") {
-		outMap = crossPoint108Outputs
+		outMap = crossPoint108Map.outputs
 	} else if strings.Contains(deviceModels[socketKey], "DTPCP86") {
-		outMap = crossPoint86Outputs
+		outMap = crossPoint86Map.outputs
 	} else if strings.Contains(deviceModels[socketKey], "DTPCP84") {
-		outMap = crossPoint84Outputs
+		outMap = crossPoint84Map.outputs
 	} else if strings.Contains(deviceModels[socketKey], "IN18") {
-		outMap = in180xOutputs
+		outMap = in180xMap.outputs
 	} else {
 		errMsg := function + " - unknown device model: " + deviceModels[socketKey]
 		framework.AddToErrors(socketKey, errMsg)
@@ -271,18 +287,13 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 	framework.Log(fmt.Sprintf("%s - %s - output: %s, is at index: %d of %s", function, socketKey, output, index, resp))
 	framework.Log(fmt.Sprintf("%s - %s - result: %s", function, socketKey, result))
 
-	switch result {
-	case "0":
-		return "false", nil
-	case "1":
-		return "true", nil
-	case "2":
-		return "true", nil
-	default:
-		errMsg := function + " - invalid response for output: " + output + ": " + resp
+	result, err = stringIntToStringBool(socketKey, result)
+	if err != nil {
+		errMsg := function + " - error converting video mute status to boolean: " + err.Error()
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
+	return result, nil
 }
 
 func getMatrixMuteDo(socketKey string, endpoint string, input string, output string, _ string) (string, error) {
@@ -436,6 +447,24 @@ func notImplemented(socketKey string, endpoint string, _ string, _ string, _ str
 	errMsg := fmt.Sprintf("%s - %s - endpoint '%s' is not implemented", function, socketKey, endpoint)
 	framework.AddToErrors(socketKey, errMsg)
 	return "", errors.New(errMsg)
+}
+
+func stringIntToStringBool(socketKey string, input string) (string, error) {
+	// 'Casts' a string representation of an integer to a string representation of a boolean
+	function := "stringIntToStringBool"
+
+	result := ""
+	errMsg := ""
+
+	if input == "1" {
+		result = "true"
+	} else if input == "0" {
+		result = "false"
+	} else {
+		errMsg = function + " - can't cast to 'True' or 'False': " + input
+	}
+
+	return result, errors.New(errMsg)
 }
 
 //////////////////////////////////////////
