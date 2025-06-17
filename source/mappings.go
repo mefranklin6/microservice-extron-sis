@@ -3,6 +3,7 @@ package main
 // Mappings //
 var errorResponsesMap = map[string]string{
 	"E01": "Invalid input number",
+	"E06": "Invalid input during auto-input switching",
 	"E10": "Invalid command",
 	"E11": "Invalid preset number",
 	"E12": "Invalid port number",
