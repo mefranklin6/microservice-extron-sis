@@ -47,6 +47,7 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
+	resp = strings.ReplaceAll(resp, `"`, ``)
 
 	// matrix will return string of 1 or 0 for all inputs it supports
 	// scaler will do the same but with "*" between inputs
@@ -54,8 +55,8 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 	// switcher will return backwards DA, ex: "1 0 1 0*0" (output is last)
 
 	// handle Distribution Amplifier (one input only)
-	if strings.Count(resp, "*") == 1 && string(resp[1]) == "*" && len(resp) > 1 && (string(resp[1]) == "1" || string(resp[1]) == "0") {
-		input := string(resp[1])
+	if strings.Count(resp, "*") == 1 && string(resp[1]) == "*" && len(resp) > 1 && (string(resp[0]) == "1" || string(resp[0]) == "0") {
+		input := string(resp[0])
 		if input == "1" {
 			return "true", nil
 		} else if resp == "0" {
@@ -67,9 +68,8 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 		}
 	}
 
-	// Switcher ("*" should be second to last character)
+	// Switcher: "*" should be second to last character)
 	if strings.Count(resp, "*") == 1 {
-		resp = strings.ReplaceAll(resp, `"`, ``)
 		resp = strings.ReplaceAll(resp, "\r", "")
 		starIndx := strings.Index(resp, "*")
 		if starIndx == len(resp)-2 {
@@ -88,6 +88,7 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 	resp = strings.ReplaceAll(resp, `*`, ``)
 
 	// cast the input string to an integer
+	// FIXME: need crosspoint mapping ex: 3A
 	inputNum, err := strconv.Atoi(input)
 	if err != nil {
 		errMsg := function + " - invalid input number: " + input
