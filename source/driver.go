@@ -59,7 +59,7 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 		input := string(resp[0])
 		if input == "1" {
 			return "true", nil
-		} else if resp == "0" {
+		} else if input == "0" {
 			return "false", nil
 		} else {
 			errMsg := function + " - invalid response for DA input status: " + resp
@@ -87,16 +87,20 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 	// Remove any matrix formatting
 	resp = strings.ReplaceAll(resp, `*`, ``)
 
+	deviceModel := deviceModels[socketKey]
+
 	inMap := make(map[string]int)
-	if strings.Contains(deviceModels[socketKey], "DTPCP108") {
+
+	switch {
+	case strings.Contains(deviceModel, "DTPCP108"):
 		inMap = crossPoint108Map.inputs
-	} else if strings.Contains(deviceModels[socketKey], "DTPCP86") {
+	case strings.Contains(deviceModel, "DTPCP86"):
 		inMap = crossPoint86Map.inputs
-	} else if strings.Contains(deviceModels[socketKey], "DTPCP84") {
+	case strings.Contains(deviceModel, "DTPCP84"):
 		inMap = crossPoint84Map.inputs
-	} else if strings.Contains(deviceModels[socketKey], "IN18") {
+	case strings.Contains(deviceModel, "IN18"):
 		inMap = in180xMap.inputs
-	} else {
+	default:
 		// If we got here, hopefully it's a device with a straight 1:1 mapping (ex: no '3A', just '3')
 		inputNum, err := strconv.Atoi(input)
 		if err != nil {
@@ -114,12 +118,12 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 		singleCharResult := string(resp[inputNum-1])
 		result, err := stringIntToStringBool(socketKey, singleCharResult)
 		if err != nil {
-			errMsg := function + " - error converting input status to boolean: " + err.Error()
-			framework.AddToErrors(socketKey, errMsg)
-			return errMsg, errors.New(errMsg)
+			framework.AddToErrors(socketKey, err)
+			return "", err
 		}
 		return result, nil
 	}
+
 	// Check if input is in the map
 	var index int
 	var ok bool
