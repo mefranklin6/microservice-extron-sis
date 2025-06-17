@@ -56,10 +56,12 @@ var internalGetCmdMap = map[string]map[string]string{
 		"Matrix Switcher":        "0LS\r",
 		"Scaler":                 "\x1B0LS\r",
 		"Distribution Amplifier": "\x1BLS\r",
+		"Switcher":               "\x1BLS\r",
 	},
 	"videoroute": {
 		"Matrix Switcher": "%s%%\r", // arg1: output name
 		"Scaler":          "&\r",
+		"Switcher":        "!\r",
 	},
 	//"audioroute": {
 	//	"Matrix Switcher": "%s$\r", // arg1: output name
@@ -68,6 +70,7 @@ var internalGetCmdMap = map[string]map[string]string{
 	"audiomute": {
 		"Matrix Switcher": "%s*B\r", // arg1: output name
 		"Scaler":          "*B\r",
+		"Switcher":        "\x1BAFMT\r",
 	},
 	"videomute": {
 		"Matrix Switcher":        "\x1BVM\r",
@@ -97,28 +100,36 @@ var internalSetCmdMap = map[string]map[string]string{
 	"videoroute": {
 		"Matrix Switcher": "%s*%s%%\r", // arg1: input name | arg2: output name
 		"Scaler":          "%s&\r",     // arg1: input name
+		"Switcher":        "%s!\r",     // arg1: input name
 	},
 	"audioandvideoroute": {
 		"Matrix Switcher": "%s*%s!\r", // arg1: input name | arg2: output name
 		"Scaler":          "%s!\r",    // arg1: input name
+		"Switcher":        "%!\r",     // arg1: input name
 	},
 	"videomute": {
 		"Matrix Switcher":        "%s*1B\r", // arg1: output name
 		"Scaler":                 "%s*1B\r",
-		"Switcher":               "%s*1B\r",
+		"Switcher":               "1B\r",
 		"Distribution Amplifier": "%s*1B\r",
 	},
 	"videounmute": {
 		"Matrix Switcher":        "%s*0B\r", // arg1: output name
 		"Scaler":                 "%s*0B\r",
-		"Switcher":               "%s*0B\r",
+		"Switcher":               "0B\r",
 		"Distribution Amplifier": "%s*0B\r",
 	},
 	"videosyncmute": {
 		"Matrix Switcher":        "%s*2B\r", // arg1: output name
 		"Scaler":                 "%s*2B\r",
-		"Switcher":               "%s*2B\r",
+		"Switcher":               "2B\r",
 		"Distribution Amplifier": "%s*2B\r",
+	},
+	"audiomute": {
+		"Switcher": "\x1B1AFMT\r",
+	},
+	"audiounmute": {
+		"Switcher": "\x1B0AFMT\r",
 	},
 
 	//"globalvideomute":        "1*B\r",
