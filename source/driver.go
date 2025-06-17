@@ -96,14 +96,14 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 	}
 
 	// Check if index is in bounds
-	if inputNum < 0 || inputNum >= len(resp)+1 { // +1 because input is 1-based index
+	if inputNum < 0 || inputNum >= len(resp)+1 {
 		errMsg := function + " - input number out of range: " + input
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
 
 	// Extract the single character
-	result := string(resp[inputNum])
+	result := string(resp[inputNum] + 1)
 
 	// 'cast' result to 'bool' (still a string)
 	if result == "1" {
