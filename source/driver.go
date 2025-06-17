@@ -70,8 +70,11 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 	// Switcher ("*" should be second to last character)
 	if strings.Count(resp, "*") == 1 {
 		starIndx := strings.Index(resp, "*")
-		if starIndx == len(resp)-2 {
-			resp = resp[:2] // trim output and "*"
+		if starIndx == len(resp)-3 {
+			resp = resp[len(resp)-3:]      // remove the star, output, and carriage return
+			resp = strings.TrimSpace(resp) // remove any leading/trailing spaces
+			fmt.Println("Switcher input status response: ", resp)
+			fmt.Println("Switcher input status response length: ", len(resp))
 		} else {
 			errMsg := function + " - invalid response for switcher input status: " + resp
 			framework.AddToErrors(socketKey, errMsg)
