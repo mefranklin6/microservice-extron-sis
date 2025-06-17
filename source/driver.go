@@ -841,7 +841,7 @@ func categorizeDeviceType(socketKey string, modelDescriptionResp string) string 
 	case strings.Contains(resp, "dmp") || strings.Contains(resp, "digital audio"):
 		deviceType = "Audio Processor"
 
-	case strings.Contains(resp, "Presentation System"):
+	case strings.Contains(resp, "presentation system"):
 		deviceType = "Collaboration Systems" //ex: ShareLink. Note: SSH only
 
 	case (strings.Contains(resp, "matrix") && !strings.Contains(resp, "audio")) || strings.Contains(resp, "xtp"):
@@ -859,12 +859,11 @@ func categorizeDeviceType(socketKey string, modelDescriptionResp string) string 
 	case resp == "streaming media processor":
 		deviceType = "Streaming Media" // ex: SMP3xx
 
-	//case strings.Contains(resp, "????"):
-	//	deviceType = "Switcher" // non-scaling switchers, often older or low-end models
+	case strings.Contains(resp, "switcher") && !strings.Contains(resp, "scaling") && !strings.Contains(resp, "matrix") && !strings.Contains(resp, "scaler"):
+		deviceType = "Switcher" // non-scaling switchers, often older or low-end models
 
 	case strings.Contains(resp, "distribution amplifier"):
 		deviceType = "Distribution Amplifier"
-
 	default:
 		deviceType = "unknown"
 	}
