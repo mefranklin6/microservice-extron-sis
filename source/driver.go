@@ -96,7 +96,7 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 	}
 
 	// Check if index is in bounds
-	if inputNum < 0 || inputNum >= len(resp) {
+	if inputNum < 0 || inputNum >= len(resp)+1 { // +1 because input is 1-based index
 		errMsg := function + " - input number out of range: " + input
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
