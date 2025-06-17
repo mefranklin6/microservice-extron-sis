@@ -118,7 +118,7 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 		singleCharResult := string(resp[inputNum-1])
 		result, err := stringIntToStringBool(socketKey, singleCharResult)
 		if err != nil {
-			framework.AddToErrors(socketKey, err)
+			framework.AddToErrors(socketKey, err.Error())
 			return "", err
 		}
 		return result, nil
