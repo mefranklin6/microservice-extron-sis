@@ -18,7 +18,7 @@ Not affliated with Extron.  SIS and Simple Instruction Set are copyrights of Ext
 
 Endpoints follow the OpenAV Unified Endpoint Definitions file.
 
-#### 1. In `src/driver.go` Add device specific commands to `internalGetCmdMap` or `internalSetCmdMap` following the nested structure of
+#### 1. In `src/mappings.go` Add device specific commands to `internalGetCmdMap` or `internalSetCmdMap` following the nested structure of
 
 ```json
 [
@@ -29,7 +29,9 @@ Endpoints follow the OpenAV Unified Endpoint Definitions file.
 ]
 ```
 
-*Note: be aware of Go's escape strings.  For example if a command includes a `%`, then it needs to be escaped by `%%`*
+> Be aware of Go's escape strings.  For example if a command includes a `%`, then it needs to be escaped by `%%`
+>
+> Hint: Many SIS commands use the "ESC" button, which is coded as `\x1B`.  Return is `\r`
 
 Device Types are derived from their GVE types, but we need to make exceptions if there's any differing commands.  If you need to add a device type, make sure to edit `findDeviceType` function accordingly.
 
