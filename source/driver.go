@@ -441,7 +441,7 @@ func setVideoSyncMuteDo(socketKey string, endpoint string, output string, state 
 }
 
 func setAudioMuteDo(socketKey string, endpoint string, output string, state string, _ string) (string, error) {
-	// function := "setAudioMuteDo"
+	function := "setAudioMuteDo"
 
 	var cmd string
 	if state == "true" {
@@ -452,8 +452,9 @@ func setAudioMuteDo(socketKey string, endpoint string, output string, state stri
 
 	resp, err := deviceTypeDependantCommand(socketKey, cmd, "SET", output, "", "")
 	if err != nil {
-		// Error already logged by lower function
-		return "", err
+		errMsg := function + "- error setting audio mute: " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
 	}
 	return resp, nil
 }
