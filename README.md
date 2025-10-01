@@ -2,17 +2,34 @@
 
 Universal OpenAV microservice for Extron devices that support Simple Instruction Set (SIS)
 
-Not affliated with Extron.  SIS and Simple Instruction Set are copyrights of Extron.
+Not affiliated with Extron.  SIS and Simple Instruction Set are copyrights of Extron.
+
+Work-in-progress
 
 ## Features
 
 - Supports telnet and serial connections.
 
-- Supports the offical OpenAV endpoints (work in progress)
+- Supports the official OpenAV endpoints (work in progress)
 
 - Supports extra endpoints such as `temperature`.  See `publicGetCmdEndpoints` and `publicSetCmdEndpoints` for supported commands.
 
 ## Contributing
+
+### Creating a developer environment (Windows)
+
+1. [Download Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/).  Make a Docker personal account if you don't already have one.  Since this is an open-source project, Docker Desktop is available at no cost.  Please note that other uses of Docker Desktop may violate the free license.  You might be asked to install and configure WSL during the process.
+
+2. Clone this repo into your IDE.  If using VSCode, allow it to download all the helpful Go features like the linter and allow it to run gofmt on save (default).
+
+3. In a terminal, from the filepath of the cloned repo, initialize the shared microservice-framework with
+
+    ```pwsh
+    git submodule sync --recursive
+    git submodule update --init --recursive --depth 1
+    ```
+
+4. When you're ready to run the container, execute the included helper script: `recompile.ps1`.  If you make any modifications to the code, just run the script again to make a new container.
 
 ### Adding endpoints
 
@@ -38,14 +55,14 @@ Device Types are derived from their GVE types, but we need to make exceptions if
 Currently the valid device types are:
 
 - `Audio Processor` (ex: DMP)
-- `Collabration Systems` (ex: Sharelink)
+- `Collaboration Systems` (ex: Sharelink)
 - `Controller` (power and relay control, not IPCP's)
 - `Distribution Amplifier`
 - `Matrix Switcher` (ex: CrossPoint)
 - `Scaler` (ex: IN xx0x)
 - `Streaming Media` (ex: SMP 3xx)
 
-#### 2. Make your function under `// Get Functions //` or `// Set Functions //` in `driver.go`
+#### 2. Make your function is under `// Get Functions //` or `// Set Functions //` in `driver.go`
 
 Function name conventions: "get or set" + "endpoint name" + "Do"
 
@@ -55,11 +72,11 @@ func getSomethingDo(socketKey string, endpoint string, arg1 string, arg2 string,
     function := "getSomethingDo"
 
     // send the command
-    // the first paramater is always sockeKey
-    // the second paramater is the name of your endpoint
-    // the third paramater is either "GET" or "SET"
+    // the first parameter is always socketKey
+    // the second parameter is the name of your endpoint
+    // the third parameter is either "GET" or "SET"
     // the last three are endpoint arguments
-    // for any args you don't need, just send ""
+    // for any args you don't need, just send "" (Go does not support optional params)
     resp, err := deviceTypeDependantCommand(socketKey, "endpointname", "GET", arg1, "", "")
 
     // check if there was a problem and log it
