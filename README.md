@@ -1,6 +1,6 @@
 # microservice-extron-sis
 
-Universal OpenAV-compatible microservice for Extron devices that support Simple Instruction Set (SIS)
+Universal [OpenAV](https://github.com/Dartmouth-OpenAV) compatible microservice for Extron devices that support Simple Instruction Set (SIS)
 
 Not affiliated with Extron.  SIS and Simple Instruction Set are copyrights of Extron.
 
