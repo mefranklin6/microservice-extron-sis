@@ -1,6 +1,6 @@
 # microservice-extron-sis
 
-Universal OpenAV microservice for Extron devices that support Simple Instruction Set (SIS)
+Universal OpenAV-compatible microservice for Extron devices that support Simple Instruction Set (SIS)
 
 Not affiliated with Extron.  SIS and Simple Instruction Set are copyrights of Extron.
 
@@ -116,3 +116,39 @@ return either `specialEndpointGet` or `specialEndpointSet` with
 
 Build and run the docker image to run commands against it
 Writing test scripts is encouraged.
+
+### Testing
+
+With the docker container running, the default settings expose port 80 on all network interfaces.
+You can either use the localhost address `127.0.0.1` or you can use the IP of your network interface card from an external computer.
+
+- Curl example to get the temperature of a device at 192.168.50.82:
+
+    ```pwsh
+    curl http://127.0.0.1/:DEVICEPASSWORD@192.168.50.82/temperature
+    ```
+
+Broken down:
+
+- `http://127.0.0.1/`: The server address.  In this case it's localhost as we're sending curl commands from the machine running the docker container
+
+- `:DEVICEPASSWORD@192.168.50.82`:
+  - Before the `:`, you can specify a port or you can leave it blank for port 23 telnet
+  - The rest is just PASSWORD @ DEVICE ADDRESS
+
+- `/temperature` the endpoint to GET temperature
+
+Returns the temperature string the device gave 'ex "35C", or an error string
+
+- Curl example to set video mute ON for output 1 of a device at 192.168.50.82:
+
+    ```pwsh
+    curl -X PUT http://127.0.0.1/:DEVICEPASSWORD@192.168.50.82/videomute/1/true
+    ```
+
+- ```pwsh/videomute/1/true```:
+  - Endpoint: `videomute`
+  - Arg1: output identifier (e.g., `1`, `1A`, `3B`, or `LoopThrough` depending on device type)
+  - Arg2: desired state (`true` to mute, `false` to unmute)
+
+Returns: "ok" or error string
