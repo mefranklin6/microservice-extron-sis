@@ -178,7 +178,7 @@ var setFunctionsMap = map[string]func(string, string, string, string, string) (s
 	"volume":             notImplemented, // TODO
 	"videoroute":         setVideoRouteDo,
 	"audioandvideoroute": setAudioAndVideoRoute,
-	"audiomute":          notImplemented, // TODO
+	"audiomute":          setAudioMuteDo,
 	"videomute":          setVideoMuteDo,
 	"videosyncmute":      setVideoSyncMuteDo,
 	"audioandvideomute":  notImplemented, // TODO

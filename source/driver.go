@@ -440,6 +440,24 @@ func setVideoSyncMuteDo(socketKey string, endpoint string, output string, state 
 	}
 }
 
+func setAudioMuteDo(socketKey string, endpoint string, output string, state string, _ string) (string, error) {
+	// function := "setAudioMuteDo"
+
+	var cmd string
+	if state == "true" {
+		cmd = "audiomute"
+	} else {
+		cmd = "audiounmute"
+	}
+
+	resp, err := deviceTypeDependantCommand(socketKey, cmd, "SET", output, "", "")
+	if err != nil {
+		// Error already logged by lower function
+		return "", err
+	}
+	return resp, nil
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Helper functions //
 ///////////////////////////////////////////////////////////////////////////////
@@ -823,6 +841,7 @@ func ensureActiveConnection(socketKey string) error {
 }
 
 // Internal: Checks if the device returned an error code.  If it did, return a formatted error message.
+// We don't raise Go errors here since we want the device response to be returned to the calling client
 func formatDeviceErrMessage(socketKey string, resp string) string {
 	function := "formatDeviceErrMessage"
 
