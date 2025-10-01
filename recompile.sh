@@ -1,4 +1,4 @@
-# Dev script that removes any old container and rebuilds a new one with your changes
+# Linux dev script that removes any old container and rebuilds a new one with your changes
 # Run when you update the code and need to deploy a new test container
 # Use only for testing and development
 
