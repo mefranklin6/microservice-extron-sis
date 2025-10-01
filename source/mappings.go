@@ -127,10 +127,12 @@ var internalSetCmdMap = map[string]map[string]string{
 		"Distribution Amplifier": "%s*2B\r",
 	},
 	"audiomute": {
-		"Switcher": "\x1B1AFMT\r",
+		"Switcher":               "\x1B1AFMT\r",
+		"Distribution Amplifier": "\x1B%s*1AFMT\r", // arg1: output name
 	},
 	"audiounmute": {
-		"Switcher": "\x1B0AFMT\r",
+		"Switcher":               "\x1B0AFMT\r",
+		"Distribution Amplifier": "\x1B%s*0AFMT\r", // arg1: output name
 	},
 
 	//"globalvideomute":        "1*B\r",
