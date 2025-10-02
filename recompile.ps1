@@ -29,6 +29,10 @@ if ($containers) {
 # Rebuild and run
 Write-Host "Building image '$image'..."
 docker build -t $image .
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Docker build failed."
+    exit 1
+}
 
 Write-Host "Starting new container..."
 docker run -d -p $portMapping $image
