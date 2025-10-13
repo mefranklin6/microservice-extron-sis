@@ -5,13 +5,13 @@ COPY source /go/src
 ENV GOPATH=
 
 WORKDIR /go/src/microservice-framework
-RUN go mod init github.com/Dartmouth-OpenAV/microservice-framework
+RUN go mod init github.com/mefranklin6/microservice-framework
 RUN go mod tidy
 
 WORKDIR /go
 # Change the module path for each microservice
-RUN go mod init github.com/Dartmouth-OpenAV/microservice-extron-sis
-RUN go mod edit -replace github.com/Dartmouth-OpenAV/microservice-framework=./src/microservice-framework
+RUN go mod init github.com/mefranklin6/microservice-extron-sis
+RUN go mod edit -replace github.com/mefranklin6/microservice-framework=./src/microservice-framework
 RUN go mod tidy
 
 WORKDIR /go/src
