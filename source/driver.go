@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Dartmouth-OpenAV/microservice-framework/framework"
+	"github.com/mefranklin6/microservice-framework/framework"
 )
 
 // Package-level variables

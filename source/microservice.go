@@ -2,9 +2,10 @@ package main
 
 import (
 	"errors"
+	"microservice-extron-sis/source/microservice-framework/framework"
 	"time"
 
-	"github.com/Dartmouth-OpenAV/microservice-framework/framework"
+	"github.com/mefranklin6/microservice-framework/framework"
 )
 
 func setFrameworkGlobals() {
@@ -12,10 +13,11 @@ func setFrameworkGlobals() {
 	framework.MicroserviceName = "OpenAV Extron SIS MicroService"
 	framework.DefaultSocketPort = 23 // Default telnet port is 23
 	framework.CheckFunctionAppendBehavior = "Remove older instance"
+	framework.AllowSSH = true
+	framework.DefaultSSHPort = 22023
 	framework.UseTelnet = true
 	framework.KeepAlive = true
-	framework.KeepAlivePolling = true              // make framework aware we're implementing polling here
-	framework.DisconnectAfterDoneRefreshing = true // or else devices will close
+	framework.KeepAlivePolling = true // make framework aware we're implementing polling here
 
 	framework.RegisterMainGetFunc(doDeviceSpecificGet)
 	framework.RegisterMainSetFunc(doDeviceSpecificSet)
