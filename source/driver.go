@@ -756,6 +756,7 @@ func virtualReturnToEXPOutput(vret, expOut string) (string, error) {
 func telnetLoginNegotiation(socketKey string) (success bool) {
 	function := "telnetLoginNegotiation"
 
+	framework.Log(function + " - Starting telnet login for: " + socketKey)
 	// Get password. Extron Telnet connection assumes 'admin' as username
 	password := "" // device expects empty string if no password is set
 	if strings.Count(socketKey, "@") == 1 {
@@ -825,7 +826,8 @@ func ensureActiveConnection(socketKey string) error {
 
 	connected := framework.CheckConnectionsMapExists(socketKey)
 	if connected == false {
-		if framework.UseTelnet {
+		protocol := framework.GetDeviceProtocol(socketKey)
+		if framework.UseTelnet && protocol != "ssh" {
 			negotiation := telnetLoginNegotiation(socketKey)
 			if negotiation == false {
 				errMsg := fmt.Sprintf(function + " - h3boid - error logging in")
