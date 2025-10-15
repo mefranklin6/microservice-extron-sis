@@ -10,10 +10,11 @@ import (
 func setFrameworkGlobals() {
 	// globals that change modes in the microservice framework:
 	framework.MicroserviceName = "OpenAV Extron SIS MicroService"
-	framework.DefaultSocketPort = 23 // Default telnet port is 23
+	framework.DefaultSocketPort = 23 // Telnet on 23
 	framework.CheckFunctionAppendBehavior = "Remove older instance"
-	framework.DefaultSSHPort = 22023
-	framework.UseTelnet = true
+	framework.DefaultSSHPort = 22023 // SIS SSH on 22023
+	framework.SSHMode = "per-command session"
+	framework.SSHAuthType = "keyboard-interactive"
 	framework.KeepAlive = true
 	framework.KeepAlivePolling = true              // make framework aware we're implementing polling here
 	framework.DisconnectAfterDoneRefreshing = true // if polling stops we need to close first
