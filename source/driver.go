@@ -1089,6 +1089,24 @@ func deviceTypeDependantCommand(socketKey string, endpoint string, method string
 	return resp, nil
 }
 
+// Internal helper function to process SSH output
+// Returns the last line to ignore welcome headers
+func processSSHOutput(output string) string {
+	normalized := strings.ReplaceAll(output, "\r\n", "\n")
+	lines := strings.Split(normalized, "\n")
+
+	// Find the last non-empty line
+	var lastLine string
+	for i := len(lines) - 1; i >= 0; i-- {
+		trimmed := strings.TrimSpace(lines[i])
+		if trimmed != "" {
+			lastLine = trimmed
+			break
+		}
+	}
+	return lastLine
+}
+
 // entry point for special endpoints that require their own get function
 func specialEndpointGet(socketKey string, endpoint string, arg1 string, arg2 string, arg3 string) (string, error) {
 	function := "specialEndpointGet"
@@ -1169,6 +1187,10 @@ func sendBasicCommandDo(socketKey string, cmdString string) (string, error) {
 		return errMsg, errors.New(errMsg)
 	}
 	resp := framework.ReadLineFromSocket(socketKey)
+
+	if framework.GetDeviceProtocol(socketKey) == "ssh" {
+		resp = processSSHOutput(resp)
+	}
 
 	deviceErrMsg := formatDeviceErrMessage(socketKey, resp)
 	if deviceErrMsg != "" {
