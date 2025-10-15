@@ -125,22 +125,24 @@ You can either use the localhost address `127.0.0.1` or you can use the IP of yo
 - Curl example to get the temperature of a device at 192.168.50.82:
 
     ```pwsh
-    curl http://127.0.0.1/:DEVICEPASSWORD@192.168.50.82/temperature
+    curl http://127.0.0.1/ssh|username:devicepassword@192.168.50.82:22023/temperature
     ```
 
 Broken down:
 
 - `http://127.0.0.1/`: The server address.  In this case it's localhost as we're sending curl commands from the machine running the docker container
 
-- `:DEVICEPASSWORD@192.168.50.82`:
-  - Before the `:`, you can specify a port or you can leave it blank for port 23 telnet
-  - The rest is just PASSWORD @ DEVICE ADDRESS
+- `ssh|username:devicepassword@192.168.50.82`:
+  - Optional: Specify a protocol with a pipe `|` delimiter.  (Don't include the pipe if you don't specify a protocol)
+  - Optional: specify a username if needed, or leave it blank and default to 'admin'
+  - @<device_address>
+  - Optional: Specify a port after address with `:port`
 
 - `/temperature` the endpoint to GET temperature
 
 Returns the temperature string the device gave 'ex "35C", or an error string
 
-- Curl example to set video mute ON for output 1 of a device at 192.168.50.82:
+- Curl example to set video mute ON for output 1 of a device at 192.168.50.82, using default username, default protocol of Telnet and default Telnet port of 23:
 
     ```pwsh
     curl -X PUT http://127.0.0.1/:DEVICEPASSWORD@192.168.50.82/videomute/1/true
