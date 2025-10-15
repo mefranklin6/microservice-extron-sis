@@ -827,7 +827,7 @@ func ensureActiveConnection(socketKey string) error {
 	connected := framework.CheckConnectionsMapExists(socketKey)
 	if connected == false {
 		protocol := framework.GetDeviceProtocol(socketKey)
-		if framework.UseTelnet && protocol != "ssh" {
+		if protocol != "ssh" {
 			negotiation := telnetLoginNegotiation(socketKey)
 			if negotiation == false {
 				errMsg := fmt.Sprintf(function + " - h3boid - error logging in")
@@ -978,6 +978,10 @@ func startKeepAlivePoll(socketKey string, interval time.Duration, keepAliveCmd s
 
 	// Check if already running
 	if _, exists := keepAlivePollRoutines[socketKey]; exists {
+		return nil
+	}
+
+	if framework.SSHMode == "per-command session" && framework.GetDeviceProtocol(socketKey) == "ssh" {
 		return nil
 	}
 
