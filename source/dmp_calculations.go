@@ -11,6 +11,24 @@ import (
 // This file handles the maths to determine mix point numbers
 // These were built using a DMP 128 Plus C V AT
 
+type TableKey string
+
+const (
+	// Output-mix matrices (Tables 3-5)
+	MicToOut   TableKey = "MicToOut"   // Table 3 – Mic/Line → Line Out
+	VRetToOut  TableKey = "VRetToOut"  // Table 4 – Virtual Return → Line Out
+	EXPInToOut TableKey = "EXPInToOut" // Table 5 – EXP In → Line Out
+
+	// Virtual-send matrices (Tables 6-8)
+	MicToSend   TableKey = "MicToSend"   // Table 6 – Mic/Line → Virtual Send
+	VRetToSend  TableKey = "VRetToSend"  // Table 7 – Virtual Return → Virtual Send
+	EXPInToSend TableKey = "EXPInToSend" // Table 8 – EXP In → Virtual Send
+
+	// EXP-output matrices (Tables 9-10)
+	MicToEXPOut  TableKey = "MicToEXPOut"  // Table 9 – Mic/Line → EXP Out
+	VRetToEXPOut TableKey = "VRetToEXPOut" // Table 10 – Virtual Return → EXP Out
+)
+
 // Base addresses for DMP matrix tables. See the DMP user manual.
 var dmpBaseAddr = map[TableKey]int{
 	MicToOut:     20000, // Table 3
