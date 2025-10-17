@@ -125,25 +125,30 @@ You can either use the localhost address `127.0.0.1` or you can use the IP of yo
 - Curl example to get the temperature of a device at 192.168.50.82:
 
     ```pwsh
-    curl http://127.0.0.1/:DEVICEPASSWORD@192.168.50.82/temperature
+    curl http://127.0.0.1/telnet|admin:password@192.168.50.82:23/temperature
     ```
 
 Broken down:
 
-- `http://127.0.0.1/`: The server address.  In this case it's localhost as we're sending curl commands from the machine running the docker container
+- `curl` with no augments default to GET.  If you want to instead change a setting, you would use `curl -X PUT`.
 
-- `:DEVICEPASSWORD@192.168.50.82`:
-  - Before the `:`, you can specify a port or you can leave it blank for port 23 telnet
-  - The rest is just PASSWORD @ DEVICE ADDRESS
+- `http://127.0.0.1/`: The docker host address.  In this case it's localhost as we're sending curl commands from the machine running the docker container
 
-- `/temperature` the endpoint to GET temperature
+- `telnet|username:password@192.168.50.82:23`:
+  - Protocol followed by pipe `|`.  Some Extron devices are Telnet only, some are SSH only, some support both.  It is recommended to use Telnet if the device supports it.  If you don't specify a protocol, the framework will assume TCP, which will not work for Extron devices.
+  
+  - `username:password`: Generally you'll use the 'admin' account, although Extron also supports 'user' with less privileges.
+  
+  - `<ipaddress/DNS name>:<port>`.  If you don't specify the port, it will default to 23 if protocol is Telnet, or 22023 if SSH.
+  
+  - `/temperature` the endpoint to GET temperature.  If this call had any arguments to pass, you would specify up to three arguments afterwards with forward slashes `/`.
 
 Returns the temperature string the device gave 'ex "35C", or an error string
 
-- Curl example to set video mute ON for output 1 of a device at 192.168.50.82:
+- Curl example to set video mute ON for output 1 of a device at 192.168.50.82.  Note that we can omit the SSH port as the framework will fill in DefaultSSHPort set to the proper 22023:
 
     ```pwsh
-    curl -X PUT http://127.0.0.1/:DEVICEPASSWORD@192.168.50.82/videomute/1/true
+    curl -X PUT http://127.0.0.1/ssh|admin:DEVICEPASSWORD@192.168.50.82/videomute/1/true
     ```
 
 - ```pwsh/videomute/1/true```:
