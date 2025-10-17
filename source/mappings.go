@@ -306,15 +306,3 @@ const (
 	MicToEXPOut  TableKey = "MicToEXPOut"  // Table 9 – Mic/Line → EXP Out
 	VRetToEXPOut TableKey = "VRetToEXPOut" // Table 10 – Virtual Return → EXP Out
 )
-
-// Base addresses for DMP matrix tables
-var dmpBaseAddr = map[TableKey]int{
-	MicToOut:     20000, // Table 3
-	VRetToOut:    21300, // Table 4
-	EXPInToOut:   22100, // Table 5
-	MicToSend:    20009, // Table 6
-	VRetToSend:   21309, // Table 7
-	EXPInToSend:  22109, // Table 8
-	MicToEXPOut:  20018, // Table 9
-	VRetToEXPOut: 21317, // Table 10
-}
