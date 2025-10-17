@@ -8,11 +8,33 @@ Work-in-progress
 
 ## Features
 
-- Supports SSH, Telnet and serial connections.
+- Supports direct SSH and Telnet connections
 
 - Supports the official OpenAV endpoints (work in progress)
 
 - Supports extra endpoints such as `temperature`.  See `publicGetCmdEndpoints` and `publicSetCmdEndpoints` for supported commands.
+
+### Supported device goals
+
+Initial release:
+
+- IN 160X Series
+- IN 180X Series, specifically 1808 and 1804
+- DTP Crosspoints, both 4k and non 4k
+- DA HD Distribution Amplifiers
+- UCS Switchers
+- ShareLink series
+- DMP DSP's
+- MediaPort 200
+- IPL T Switched PDU's
+- Processor Serial Ports, Relay Ports, and AVLAN connected devices through [Extron-Frontend-API](http://www.github.com/mefranklin6/extron-frontend-api)
+
+Future releases:
+
+- DTP3 Crosspoints
+- NAV AVoIP
+- SMP Streaming Processors
+- Community requested devices
 
 ## Contributing
 
