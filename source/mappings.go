@@ -20,11 +20,12 @@ var errorResponsesMap = map[string]string{
 }
 
 // These can be called as endpoints but may not be part of OpenAV spec
+// Not all devices respond correctly because commands can vary from device to device
 var publicGetCmdEndpoints = map[string]string{
-	"firmwareversion":      "Q\r", // is universal across all products
+	"firmwareversion":      "Q\r", // is the only known universal command across all products
 	"temperature":          "W20STAT\r",
 	"partnumber":           "N\r",
-	"modelname":            "I\r", // does not work on older scalers
+	"modelname":            "I\r",
 	"modeldescription":     "2I\r",
 	"systemstatus":         "S\r",
 	"systemmemoryusage":    "3I\r",
