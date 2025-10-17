@@ -8,7 +8,7 @@ Work-in-progress
 
 ## Features
 
-- Supports telnet and serial connections.
+- Supports SSH, Telnet and serial connections.
 
 - Supports the official OpenAV endpoints (work in progress)
 
