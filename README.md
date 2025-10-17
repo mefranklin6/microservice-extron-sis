@@ -50,7 +50,7 @@ Endpoints follow the OpenAV Unified Endpoint Definitions file.
 >
 > Hint: Many SIS commands use the "ESC" button, which is coded as `\x1B`.  Return is `\r`
 
-Device Types are derived from their GVE types, but we need to make exceptions if there's any differing commands.  If you need to add a device type, make sure to edit `findDeviceType` function accordingly.
+Device Types are mostly derived from their GVE types, but we need to make exceptions if there's any differing commands.  If you need to add a device type, make sure to edit `findDeviceType` function accordingly.
 
 Currently the valid device types are:
 
@@ -61,6 +61,7 @@ Currently the valid device types are:
 - `Matrix Switcher` (ex: CrossPoint)
 - `Scaler` (ex: IN xx0x)
 - `Streaming Media` (ex: SMP 3xx)
+- `USB Collaboration Switcher` (ex: UCS 303)
 
 #### 2. Make your function is under `// Get Functions //` or `// Set Functions //` in `driver.go`
 
