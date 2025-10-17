@@ -17,6 +17,7 @@ var errorResponsesMap = map[string]string{
 	"E26": "Maximum number of connections exceeded",
 	"E28": "Bad name or file not found",
 	"E33": "Bad file type for logo",
+	"E35": "User account does not exist",
 }
 
 // These can be called as endpoints but may not be part of OpenAV spec
