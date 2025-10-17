@@ -941,6 +941,9 @@ func categorizeDeviceType(socketKey string, modelDescriptionResp string) string 
 	case resp == "streaming media processor":
 		deviceType = "Streaming Media" // ex: SMP3xx
 
+	case strings.Contains(resp, "UCS"):
+		deviceType = "USB Collaboration Switcher" //ex: UCS 303.
+
 	case strings.Contains(resp, "switcher") && !strings.Contains(resp, "scaling") && !strings.Contains(resp, "matrix") && !strings.Contains(resp, "scaler"):
 		deviceType = "Switcher" // non-scaling switchers, often older or low-end models
 
