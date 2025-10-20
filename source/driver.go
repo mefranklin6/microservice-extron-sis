@@ -700,7 +700,8 @@ func categorizeDeviceType(socketKey string, modelDescriptionResp string) string 
 
 	case strings.Contains(resp, "distribution amplifier"):
 		deviceType = "Distribution Amplifier"
-	case strings.Contains(resp, "IPL T PCS"):
+
+	case strings.Contains(resp, "110v ac"):
 		deviceType = "Power Controller"
 	default:
 		deviceType = "unknown"
