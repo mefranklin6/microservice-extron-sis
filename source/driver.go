@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -334,6 +335,36 @@ func getMatrixMuteDo(socketKey string, endpoint string, input string, output str
 	}
 }
 
+func getMatrixVolumeDo(socketKey string, endpoint string, input string, output string, _ string) (string, error) {
+	function := "getMatrixVolumeDo"
+
+	mixPointNumber, err := calculateDmpMixPointNumber(input, output)
+	if err != nil {
+		errMsg := function + " - error calculating mix point number: " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	resp, err := deviceTypeDependantCommand(socketKey, "matrixvolume", "GET", mixPointNumber, "", "")
+	if err != nil {
+		errMsg := function + "- error getting matrix volume status: " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	// Valid returns are in 10th of DB's.  Ex: -3.5db is '-35'. Range: -100db to 12db.
+	// Presume the rest of the system wants to get a 0-100 value where 0 is -100db and 100 is 12db
+	// Convert device value (tenths dB) to a 0-100 percentage (logarithmic mapping)
+	resp = strings.ReplaceAll(resp, `"`, ``)
+	percent, convErr := newUnTransformVolume(resp)
+	if convErr != nil {
+		errMsg := function + " - error converting device volume to percent: " + convErr.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+	return percent, nil
+}
+
 // Set functions //
 
 func setVideoRouteDo(socketKey string, endpoint string, input string, output string, _ string) (string, error) {
@@ -514,6 +545,91 @@ func setAudioMuteDo(socketKey string, endpoint string, output string, state stri
 
 func isEven(n int) bool {
 	return n%2 == 0
+}
+
+// The following two functions convert between:
+// - Device volume in tenths-of-dB (range -1000 to +120 representing -100 dB to +12 dB)
+// - Our API volume in 0-100 percent using a logarithmic curve (similar feel to Shure). Unity gain at 76
+// Mapping is normalized so 0% -> -1000 and 100% -> +120, with a curve parameter k controlling shape.
+
+// Convert percent (0 to 100) into Extron-style tenth's of decibels
+func newTransformVolume(percent string) (string, error) {
+	function := "newTransformVolume"
+	// percent is expected 0-100 (string)
+	percentInt, err := strconv.Atoi(percent)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("%s - error converting percent to int: %v", function, err))
+	}
+	if percentInt < 0 {
+		percentInt = 0
+	}
+	if percentInt > 100 {
+		percentInt = 100
+	}
+	// Bounds in tenths dB
+	minTenthsDb := -1000.0
+	maxTenthsDb := 120.0
+	tenthsDbRange := maxTenthsDb - minTenthsDb // 1120
+	// Log curve similar to Shure, normalized to [0,1]
+	k := 11.0
+	denom := math.Log10(1.0 + 100.0/k)
+	var normalized float64
+	if denom == 0 {
+		normalized = float64(percentInt) / 100.0
+	} else {
+		normalized = math.Log10(1.0+float64(percentInt)/k) / denom
+	}
+	if normalized < 0 {
+		normalized = 0
+	}
+	if normalized > 1 {
+		normalized = 1
+	}
+	tenthsDb := minTenthsDb + normalized*tenthsDbRange
+	tenthsDbInt := int(math.Round(tenthsDb))
+	return strconv.Itoa(tenthsDbInt), nil
+}
+
+// Converts Extron-style tenths of decibels to percentage 0 to 100
+func newUnTransformVolume(tenthsDb string) (string, error) {
+	function := "newUnTransformVolume"
+	// tenthsDb is a string like "-35" (=-3.5 dB) or "-1000" (=-100 dB)
+	tenthsDbInt, err := strconv.Atoi(tenthsDb)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("%s - error converting tenths dB to int: %v", function, err))
+	}
+	minTenthsDb := -1000.0
+	maxTenthsDb := 120.0
+	tenthsDbRange := maxTenthsDb - minTenthsDb // 1120
+	// Clamp to expected device range
+	clampedTenthsDb := float64(tenthsDbInt)
+	if clampedTenthsDb < minTenthsDb {
+		clampedTenthsDb = minTenthsDb
+	}
+	if clampedTenthsDb > maxTenthsDb {
+		clampedTenthsDb = maxTenthsDb
+	}
+	// Normalize to [0,1]
+	normalized := (clampedTenthsDb - minTenthsDb) / tenthsDbRange
+	if normalized < 0 {
+		normalized = 0
+	}
+	if normalized > 1 {
+		normalized = 1
+	}
+	// Invert the normalized log curve back to percent
+	k := 11.0
+	base := 1.0 + 100.0/k
+	percent := k * (math.Pow(base, normalized) - 1.0)
+	// Round to nearest integer and clamp 0..100
+	percentInt := int(math.Round(percent))
+	if percentInt < 0 {
+		percentInt = 0
+	}
+	if percentInt > 100 {
+		percentInt = 100
+	}
+	return strconv.Itoa(percentInt), nil
 }
 
 // Placeholder for not implemented functions

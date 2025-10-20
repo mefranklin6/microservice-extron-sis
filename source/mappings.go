@@ -84,7 +84,10 @@ var internalGetCmdMap = map[string]map[string]string{
 		"Distribution Amplifier": "B\r",
 	},
 	"matrixmute": {
-		"Audio Processor": "\x1BM%sAU\r", // arg1: Object ID Number
+		"Audio Processor": "\x1BM%sAU\r", // arg1: Object ID Number (mixpoint)
+	},
+	"matrixvolume": {
+		"Audio Processor": "\x1BG%sAU\r", // arg1: Object ID Number (mixpoint)
 	},
 
 	//"viewvideoinput":          "&\r",       // non-matrix
@@ -173,7 +176,7 @@ var getFunctionsMap = map[string]func(string, string, string, string, string) (s
 	"inputstatus":        getInputStatusDo,
 	"occupancystatus":    notImplemented, // TODO
 	"matrixmute":         getMatrixMuteDo,
-	"matrixvolume":       notImplemented, // TODO
+	"matrixvolume":       getMatrixVolumeDo,
 	"setstate":           notImplemented, // TODO
 }
 
