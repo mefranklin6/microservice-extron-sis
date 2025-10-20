@@ -15,30 +15,30 @@ type TableKey string
 
 const (
 	// Output-mix matrices (Tables 3-5)
-	MicToOut   TableKey = "MicToOut"   // Table 3 – Mic/Line → Line Out
-	VRetToOut  TableKey = "VRetToOut"  // Table 4 – Virtual Return → Line Out
-	EXPInToOut TableKey = "EXPInToOut" // Table 5 – EXP In → Line Out
+	MicToOut   TableKey = "MicToOut"   // Mic/Line Input to Analog and Aux Output Mix Matrix
+	VRetToOut  TableKey = "VRetToOut"  // Virtual Return to Analog and Aux Output Mix Matrix
+	EXPInToOut TableKey = "EXPInToOut" // Expansion Bus Input to Analog and Aux Output Mix Matrix
 
 	// Virtual-send matrices (Tables 6-8)
-	MicToSend   TableKey = "MicToSend"   // Table 6 – Mic/Line → Virtual Send
-	VRetToSend  TableKey = "VRetToSend"  // Table 7 – Virtual Return → Virtual Send
-	EXPInToSend TableKey = "EXPInToSend" // Table 8 – EXP In → Virtual Send
+	MicToSend   TableKey = "MicToSend"   // Mic/Line Input to Virtual Send Mix Matrix
+	VRetToSend  TableKey = "VRetToSend"  // Virtual Return to Virtual Send Mix Matrix
+	EXPInToSend TableKey = "EXPInToSend" // Expansion Bus Input to Analog and Aux Output Mix Matrix
 
 	// EXP-output matrices (Tables 9-10)
-	MicToEXPOut  TableKey = "MicToEXPOut"  // Table 9 – Mic/Line → EXP Out
-	VRetToEXPOut TableKey = "VRetToEXPOut" // Table 10 – Virtual Return → EXP Out
+	MicToEXPOut  TableKey = "MicToEXPOut"  // Mic/Line Input to EXP Output Mix Matrix
+	VRetToEXPOut TableKey = "VRetToEXPOut" // Virtual Return to EXP Output Mix Matrix
 )
 
 // Base addresses for DMP matrix tables. See the DMP user manual.
 var dmpBaseAddr = map[TableKey]int{
-	MicToOut:     20000, // Table 3
-	VRetToOut:    21300, // Table 4
-	EXPInToOut:   22100, // Table 5
-	MicToSend:    20009, // Table 6
-	VRetToSend:   21309, // Table 7
-	EXPInToSend:  22109, // Table 8
-	MicToEXPOut:  20018, // Table 9
-	VRetToEXPOut: 21317, // Table 10
+	MicToOut:     20000, // Mic/Line Input to Analog and Aux Output Mix Matrix
+	VRetToOut:    22000, // Virtual Return to Analog and Aux Output Mix Matrix
+	EXPInToOut:   23600, // Expansion Bus Input to Analog and Aux Output Mix Matrix
+	MicToSend:    20016, // Mic/Line Input to Virtual Send Mix Matrix
+	VRetToSend:   22016, // Virtual Return to Virtual Send Mix Matrix
+	EXPInToSend:  23616, // Expansion Bus Input to Analog and Aux Output Mix Matrix
+	MicToEXPOut:  20032, // Mic/Line Input to EXP Output Mix Matrix
+	VRetToEXPOut: 22032, // Virtual Return to EXP Output Mix Matrix
 }
 
 // Internal: acts as a router to the sub-helper functions for calculating DMP mix points
