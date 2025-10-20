@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mefranklin6/microservice-framework/framework" //TODO: Change after PR#5 to Dartmouth-OpenAV
+	"github.com/mefranklin6/microservice-framework/framework" // TODO: Change after PR#5 to Dartmouth-OpenAV
 )
 
 // Package-level variables
@@ -439,6 +439,53 @@ func setVideoSyncMuteDo(socketKey string, endpoint string, output string, state 
 		errMsg := function + " - invalid response for video sync mute: " + resp
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
+	}
+}
+
+// Built for DMP DSP's
+// Note, this is a 3 arg funciton.  The last argument (state) true or false is in the request body
+// Ex: curl -X PUT "http://<containerIP>/telnet|admin:pw@<deviceAddr>/matrixmute/MicToOut3/4" -H "Content-Type: application/json" -d true
+func setMatrixMuteDo(socketKey string, endpoint string, input string, output string, state string) (string, error) {
+	function := "setMatrixMuteDo"
+
+	if state == "" || state == "null" || state == "\"null\"" {
+		emptyStateMsg := function + "- Arg3 is required but not found in the request body"
+		framework.AddToErrors(socketKey, emptyStateMsg)
+		return emptyStateMsg, errors.New(emptyStateMsg)
+	}
+	var cmdState string
+	switch {
+	case strings.Contains(state, "false"):
+		cmdState = "0"
+	case strings.Contains(state, "true"):
+		cmdState = "1"
+	default:
+		stateErrMsg := function + " - Arg 3 must be 'true', or 'false'.  Got: " + state
+		framework.AddToErrors(socketKey, stateErrMsg)
+		return stateErrMsg, errors.New(stateErrMsg)
+	}
+
+	mixPointNumber, err := calculateDmpMixPointNumber(input, output)
+	if err != nil {
+		errMsg := function + " - error calculating mix point number: " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	resp, err := deviceTypeDependantCommand(socketKey, "matrixmute", "SET", mixPointNumber, cmdState, "")
+	if err != nil {
+		errMsg := function + "- error getting matrix mute status: " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	// Successful response is "DsM<mixPointNumber>*<1|0>"
+	if strings.Contains(resp, "DsM") && strings.Contains(resp, cmdState) && strings.Contains(resp, mixPointNumber) {
+		return "ok", nil
+	} else {
+		badRespMsg := function + " - unexpected device response: " + resp
+		framework.AddToErrors(socketKey, badRespMsg)
+		return badRespMsg, errors.New(badRespMsg)
 	}
 }
 

@@ -16,6 +16,7 @@ var errorResponsesMap = map[string]string{
 	"E25": "Device not present",
 	"E26": "Maximum number of connections exceeded",
 	"E28": "Bad name or file not found",
+	"E31": "Attempt to break port pass-through when not set",
 	"E33": "Bad file type for logo",
 	"E35": "User account does not exist",
 }
@@ -54,6 +55,7 @@ var publicSetCmdEndpoints = map[string]string{
 }
 
 // OpenAV spec get endpoint names with mappings for different device types
+
 var internalGetCmdMap = map[string]map[string]string{
 	"inputstatus": {
 		"Matrix Switcher":        "0LS\r",
@@ -82,7 +84,7 @@ var internalGetCmdMap = map[string]map[string]string{
 		"Distribution Amplifier": "B\r",
 	},
 	"matrixmute": {
-		"Audio Processor": "\x1BM%sAU\r",
+		"Audio Processor": "\x1BM%sAU\r", // arg1: Object ID Number
 	},
 
 	//"viewvideoinput":          "&\r",       // non-matrix
@@ -136,6 +138,9 @@ var internalSetCmdMap = map[string]map[string]string{
 		"Switcher":               "\x1B0AFMT\r",
 		"Distribution Amplifier": "\x1B%s*0AFMT\r", // arg1: output name
 	},
+	"matrixmute": {
+		"Audio Processor": "\x1BM%s*%sAU\r", // arg1: Object ID Number, arg2: mute (1) or unmute (0)
+	},
 
 	//"globalvideomute":        "1*B\r",
 	//"globalvideoandsyncmute": "2*B\r",
@@ -184,7 +189,7 @@ var setFunctionsMap = map[string]func(string, string, string, string, string) (s
 	"videomute":          setVideoMuteDo,
 	"videosyncmute":      setVideoSyncMuteDo,
 	"audioandvideomute":  notImplemented, // TODO
-	"matrixmute":         notImplemented, // TODO
+	"matrixmute":         setMatrixMuteDo,
 	"matrixvolume":       notImplemented, // TODO
 	"setstate":           notImplemented, // TODO
 	"triggerstate":       notImplemented, // TODO

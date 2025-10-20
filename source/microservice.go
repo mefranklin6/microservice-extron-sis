@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/mefranklin6/microservice-framework/framework"
+	"github.com/mefranklin6/microservice-framework/framework" //TODO: Change after PR5
 )
 
 func setFrameworkGlobals() {
@@ -68,6 +68,8 @@ func doDeviceSpecificSet(socketKey string, setting string, arg1 string, arg2 str
 		return specialEndpointSet(socketKey, "videosyncmute", arg1, arg2, "") // arg1: output, arg2: bool
 	case "audiomute":
 		return specialEndpointSet(socketKey, "audiomute", arg1, arg2, "") // arg1: output, arg2: bool
+	case "matrixmute":
+		return specialEndpointSet(socketKey, "matrixmute", arg1, arg2, arg3) // arg1: input, arg2: output, arg3: state (true|false))
 	case "stopallkeepalivepolling":
 		return stopAllKeepAlivePolling()
 	case "restartkeepalivepolling":
