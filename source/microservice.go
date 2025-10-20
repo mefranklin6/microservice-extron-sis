@@ -70,6 +70,8 @@ func doDeviceSpecificSet(socketKey string, setting string, arg1 string, arg2 str
 		return specialEndpointSet(socketKey, "audiomute", arg1, arg2, "") // arg1: output, arg2: bool
 	case "matrixmute":
 		return specialEndpointSet(socketKey, "matrixmute", arg1, arg2, arg3) // arg1: input, arg2: output, arg3: state (true|false))
+	case "matrixvolume":
+		return specialEndpointSet(socketKey, "matrixvolume", arg1, arg2, arg3) // arg1: input, arg2: output, arg3: volume (0-100)
 	case "stopallkeepalivepolling":
 		return stopAllKeepAlivePolling()
 	case "restartkeepalivepolling":

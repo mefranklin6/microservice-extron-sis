@@ -539,6 +539,50 @@ func setAudioMuteDo(socketKey string, endpoint string, output string, state stri
 	return resp, nil
 }
 
+// Note, this is a 3 arg funciton.  The last argument (level 0-100) is in the request body
+// Ex: curl -X PUT "http://<containerIP>/telnet|admin:pw@<deviceAddr>/matrixvolume/MicToOut3/4" -H "Content-Type: application/json" -d 76
+func setMatrixVolumeDo(socketKey string, endpoint string, input string, output string, level string) (string, error) {
+	function := "setMatrixVolumeDo"
+
+	mixPointNumber, err := calculateDmpMixPointNumber(input, output)
+	if err != nil {
+		errMsg := function + " - error calculating mix point number: " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	// Framework enqueues arg3 wrapped in quotes (e.g., "50"). Sanitize before converting.
+	levelSanitized := strings.TrimSpace(strings.Trim(level, `"`))
+	if levelSanitized == "" {
+		errMsg := function + " - level (0-100) required in request body"
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	levelVal, err := newTransformVolume(levelSanitized)
+	if err != nil {
+		errMsg := function + " - error converting percent volume to device volume: " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	resp, err := deviceTypeDependantCommand(socketKey, "matrixvolume", "SET", mixPointNumber, levelVal, "")
+	if err != nil {
+		errMsg := function + "- error setting matrix volume: " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	// Valid response is "DsG<mixPointNumber>*<levelVal>"
+	if strings.Contains(resp, "DsG") && strings.Contains(resp, mixPointNumber) && strings.Contains(resp, levelVal) {
+		return "ok", nil
+	} else {
+		errMsg := function + " - invalid response for setting matrix volume: " + resp
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Helper functions //
 ///////////////////////////////////////////////////////////////////////////////
@@ -556,6 +600,8 @@ func isEven(n int) bool {
 func newTransformVolume(percent string) (string, error) {
 	function := "newTransformVolume"
 	// percent is expected 0-100 (string)
+	// sanitize input in case it arrives quoted
+	percent = strings.TrimSpace(strings.Trim(percent, `"`))
 	percentInt, err := strconv.Atoi(percent)
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("%s - error converting percent to int: %v", function, err))

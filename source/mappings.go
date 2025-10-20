@@ -144,6 +144,9 @@ var internalSetCmdMap = map[string]map[string]string{
 	"matrixmute": {
 		"Audio Processor": "\x1BM%s*%sAU\r", // arg1: Object ID Number, arg2: mute (1) or unmute (0)
 	},
+	"matrixvolume": {
+		"Audio Processor": "\x1BG%s*%sAU\r", // arg1: Object ID Number, arg2: level in tenths of decibels (-1000 to 120)
+	},
 
 	//"globalvideomute":        "1*B\r",
 	//"globalvideoandsyncmute": "2*B\r",
@@ -193,7 +196,7 @@ var setFunctionsMap = map[string]func(string, string, string, string, string) (s
 	"videosyncmute":      setVideoSyncMuteDo,
 	"audioandvideomute":  notImplemented, // TODO
 	"matrixmute":         setMatrixMuteDo,
-	"matrixvolume":       notImplemented, // TODO
+	"matrixvolume":       setMatrixVolumeDo,
 	"setstate":           notImplemented, // TODO
 	"triggerstate":       notImplemented, // TODO
 	"timedtriggerstate":  notImplemented, // TODO
