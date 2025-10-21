@@ -43,7 +43,7 @@ func getVolumeDo(socketKey string, endpoint string, name string, _ string, _ str
 
 	// Check if model is supported
 	switch {
-	case strings.Contains(model, "160") || strings.Contains(model, "IN"): // IN 160x series
+	case strings.Contains(model, "160") && strings.Contains(model, "IN"): // IN 160x series
 		oid, ok = in160xGroupAudioVolumeMap[name] // Only group voloumes on 160x series (firmware bug)
 	default:
 		notImpMsg := function + "Model: " + model + " is not implemented or does not support 'volume'"
@@ -439,7 +439,7 @@ func setVolumeDo(socketKey string, endpoint string, name string, level string, _
 
 	// Check if model is supported
 	switch {
-	case strings.Contains(model, "160") || strings.Contains(model, "IN"): // IN 160x series
+	case strings.Contains(model, "160") && strings.Contains(model, "IN"): // IN 160x series
 		oid, ok = in160xGroupAudioVolumeMap[name] // Only group voloumes on 160x series (firmware bug)
 	default:
 		notImpMsg := function + "Model: " + model + " is not implemented or does not support 'volume'"
