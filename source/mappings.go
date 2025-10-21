@@ -84,7 +84,7 @@ var internalGetCmdMap = map[string]map[string]string{
 		"Distribution Amplifier": "B\r",
 	},
 	"volume": {
-		"Scaler": "\x1BD%sGRPM\r", // arg1: x46 volume group number
+		"Scaler": "\x1BD%sGRPM\r", // arg1: x46 volume group number.  Does not work with 1804
 	},
 	"matrixmute": {
 		"Audio Processor": "\x1BM%sAU\r", // arg1: Object ID Number (mixpoint)
