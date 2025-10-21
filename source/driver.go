@@ -24,6 +24,10 @@ var keepAlivePollRoutinesMutex sync.Mutex
 
 // Get functions //
 
+// This endpoint has limited functionality within the Extron ecosystem.
+// It is only used for group volume control of scalers.
+// For dedicated DSP units and matrix switchers, you'll want to use "matrixvolume" instead.
+// Note: IN1804 breaks all the patterns and is not supported yet.
 func getVolumeDo(socketKey string, endpoint string, name string, _ string, _ string) (string, error) {
 	function := "getVolumeDo"
 
@@ -416,6 +420,10 @@ func getMatrixVolumeDo(socketKey string, endpoint string, input string, output s
 
 // Set functions //
 
+// This endpoint has limited functionality within the Extron ecosystem.
+// It is only used for group volume control of scalers.
+// For dedicated DSP units and matrix switchers, you'll want to use "matrixvolume" instead.
+// Note: IN1804 breaks all the patterns and is not supported yet.
 func setVolumeDo(socketKey string, endpoint string, name string, level string, _ string) (string, error) {
 	function := "setVolumeDo"
 
@@ -701,6 +709,7 @@ func isEven(n int) bool {
 // - Device volume in tenths-of-dB (range -1000 to +120 representing -100 dB to +12 dB)
 // - Our API volume in 0-100 percent using a logarithmic curve (similar feel to Shure). Unity gain at 76
 // Mapping is normalized so 0% -> -1000 and 100% -> +120, with a curve parameter k controlling shape.
+// Note: 1804 does not follow the pattern and uses 1db steps on dbFS, -100 to +000. Ugh!
 
 // Convert percent (0 to 100) into Extron-style tenth's of decibels
 func newTransformVolume(percent string) (string, error) {
