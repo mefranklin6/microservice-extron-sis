@@ -144,6 +144,9 @@ var internalSetCmdMap = map[string]map[string]string{
 		"Switcher":               "\x1B0AFMT\r",
 		"Distribution Amplifier": "\x1B%s*0AFMT\r", // arg1: output name
 	},
+	"volume": {
+		"Scaler": "\x1BD%s*%sGRPM\r", // arg1: x46 volume group number, arg2: x47 value (-1000 to 12)
+	},
 	"matrixmute": {
 		"Audio Processor": "\x1BM%s*%sAU\r", // arg1: Object ID Number, arg2: mute (1) or unmute (0)
 	},
@@ -191,7 +194,7 @@ var getFunctionsMap = map[string]func(string, string, string, string, string) (s
 // function args are socketKey, endpoint, arg1, arg2, arg3
 var setFunctionsMap = map[string]func(string, string, string, string, string) (string, error){
 	"power":              notImplemented, // TODO
-	"volume":             notImplemented, // TODO
+	"volume":             setVolumeDo,
 	"videoroute":         setVideoRouteDo,
 	"audioandvideoroute": setAudioAndVideoRoute,
 	"audiomute":          setAudioMuteDo,

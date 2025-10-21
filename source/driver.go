@@ -416,6 +416,63 @@ func getMatrixVolumeDo(socketKey string, endpoint string, input string, output s
 
 // Set functions //
 
+func setVolumeDo(socketKey string, endpoint string, name string, level string, _ string) (string, error) {
+	function := "setVolumeDo"
+
+	model, err := findModelName(socketKey)
+	if err != nil {
+		modelErr := function + " - can not find model for: " + socketKey
+		framework.AddToErrors(socketKey, modelErr)
+		return modelErr, errors.New(modelErr)
+	}
+
+	var oid string // mix point number
+	ok := false
+
+	// Check if model is supported
+	switch {
+	case strings.Contains(model, "160") || strings.Contains(model, "IN"): // IN 160x series
+		oid, ok = in160xGroupAudioVolumeMap[name] // Only group voloumes on 160x series (firmware bug)
+	default:
+		notImpMsg := function + "Model: " + model + " is not implemented or does not support 'volume'"
+		framework.AddToErrors(socketKey, notImpMsg)
+		return notImpMsg, errors.New(notImpMsg)
+	}
+
+	// Check if we have the channel name+oid mapping for the model
+	if !ok {
+		errMsg := function + "Can't find OID for: " + name + " on model: " + model
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	// Convert percent to device volume (tenths of DB)
+	deviceVolume, err := newTransformVolume(level)
+	if err != nil {
+		errMsg := function + " - error converting percent to device volume: " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	// Try sending the command
+	resp, err := deviceTypeDependantCommand(socketKey, "volume", "SET", oid, deviceVolume, "")
+	if err != nil {
+		errMsg := function + " - error setting volume " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	// Good response is "GrpmD<mixPointNumber>*<volume>"
+	resp = strings.ReplaceAll(resp, `"`, ``)
+	expectedResp := "GrpmD" + oid + "*" + deviceVolume
+	if resp != expectedResp {
+		errMsg := function + " - invalid response for setting volume: " + resp + ", expected: " + expectedResp
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+	return "ok", nil
+}
+
 func setVideoRouteDo(socketKey string, endpoint string, input string, output string, _ string) (string, error) {
 	function := "setVideoRouteDo"
 

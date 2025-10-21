@@ -68,6 +68,8 @@ func doDeviceSpecificSet(socketKey string, setting string, arg1 string, arg2 str
 		return specialEndpointSet(socketKey, "videosyncmute", arg1, arg2, "") // arg1: output, arg2: bool
 	case "audiomute":
 		return specialEndpointSet(socketKey, "audiomute", arg1, arg2, "") // arg1: output, arg2: bool
+	case "volume":
+		return specialEndpointSet(socketKey, "volume", arg1, arg2, "") // arg1: channel or group name, arg2: volume percentage
 	case "matrixmute":
 		return specialEndpointSet(socketKey, "matrixmute", arg1, arg2, arg3) // arg1: input, arg2: output, arg3: state (true|false))
 	case "matrixvolume":
