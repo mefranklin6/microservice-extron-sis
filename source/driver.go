@@ -23,6 +23,55 @@ var keepAlivePollRoutinesMutex sync.Mutex
 ///////////////////////////////////////////////////////////////////////////////
 
 // Get functions //
+
+func getVolumeDo(socketKey string, endpoint string, name string, _ string, _ string) (string, error) {
+	function := "getVolumeDo"
+
+	model, err := findModelName(socketKey)
+	if err != nil {
+		modelErr := function + " - can not find model for: " + socketKey
+		framework.AddToErrors(socketKey, modelErr)
+		return modelErr, errors.New(modelErr)
+	}
+
+	var oid string // mix point number
+	ok := false
+
+	// Check if model is supported
+	switch {
+	case strings.Contains(model, "160") || strings.Contains(model, "IN"): // IN 160x series
+		oid, ok = in160xGroupAudioVolumeMap[name] // Only group voloumes on 160x series (firmware bug)
+	default:
+		notImpMsg := function + "Model: " + model + " is not implemented or does not support 'volume'"
+		framework.AddToErrors(socketKey, notImpMsg)
+		return notImpMsg, errors.New(notImpMsg)
+	}
+
+	// Check if we have the channel name+oid mapping for the model
+	if !ok {
+		errMsg := function + "Can't find OID for: " + name + " on model: " + model
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	// Try sending the command
+	resp, err := deviceTypeDependantCommand(socketKey, "volume", "GET", oid, "", "")
+	if err != nil {
+		errMsg := function + " - error getting volume " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	// Convert return in tenths of DB to percent
+	percent, err := newUnTransformVolume(resp)
+	if err != nil {
+		errMsg := function + " - error converting device volume to percent: " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+	return percent, nil
+}
+
 func getVideoRouteDo(socketKey string, endpoint string, output string, _ string, _ string) (string, error) {
 	function := "getVideoRouteDo"
 
@@ -640,6 +689,9 @@ func newTransformVolume(percent string) (string, error) {
 func newUnTransformVolume(tenthsDb string) (string, error) {
 	function := "newUnTransformVolume"
 	// tenthsDb is a string like "-35" (=-3.5 dB) or "-1000" (=-100 dB)
+
+	// sanitize input in case it arrives quoted from framework
+	tenthsDb = strings.TrimSpace(strings.Trim(tenthsDb, `"`))
 	tenthsDbInt, err := strconv.Atoi(tenthsDb)
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("%s - error converting tenths dB to int: %v", function, err))
@@ -924,7 +976,7 @@ func categorizeDeviceType(socketKey string, modelDescriptionResp string) string 
 }
 
 // Internal: returns the model name from a package-level cache
-// We presume devices announce their model name in the negotiation phase
+// Model name is cached at initial connection as it's in the welcome banner
 func findModelName(socketKey string) (string, error) {
 	function := "findModelName"
 
@@ -932,6 +984,15 @@ func findModelName(socketKey string) (string, error) {
 		framework.Log(fmt.Sprintf("%s - %s - Device model found in cache: %s", function, socketKey, modelName))
 		return modelName, nil // cache hit
 	}
+
+	// It's possible we don't have a connection to the device yet.  Try connect then try again.
+	err := ensureActiveConnection(socketKey)
+	_ = err
+	if modelName, exists := deviceModels[socketKey]; exists {
+		framework.Log(fmt.Sprintf("%s - %s - Device model found in cache: %s", function, socketKey, modelName))
+		return modelName, nil // cache hit
+	}
+
 	return "", errors.New("model name not found in cache")
 }
 
@@ -1033,10 +1094,6 @@ func deviceTypeDependantCommand(socketKey string, endpoint string, method string
 	}
 
 	cmdTemplate := cmdMap[endpoint][deviceType]
-
-	framework.Log(fmt.Sprintf("%s - Command template: %s", function, cmdTemplate))
-	framework.Log(fmt.Sprintf("%s - Args before formatting: arg1=%s, arg2=%s, arg3=%s", function, arg1, arg2, arg3))
-
 	cmdString := ""
 	cmdString = formatCommand(cmdTemplate, arg1, arg2, arg3)
 

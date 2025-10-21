@@ -83,6 +83,9 @@ var internalGetCmdMap = map[string]map[string]string{
 		"Switcher":               "B\r",
 		"Distribution Amplifier": "B\r",
 	},
+	"volume": {
+		"Scaler": "\x1BD%sGRPM\r", // arg1: x46 volume group number
+	},
 	"matrixmute": {
 		"Audio Processor": "\x1BM%sAU\r", // arg1: Object ID Number (mixpoint)
 	},
@@ -170,7 +173,7 @@ var internalSetCmdMap = map[string]map[string]string{
 // function args are socketKey, endpoint, arg1, arg2, arg3
 var getFunctionsMap = map[string]func(string, string, string, string, string) (string, error){
 	"power":              notImplemented, // TODO
-	"volume":             notImplemented, // TODO
+	"volume":             getVolumeDo,
 	"videoroute":         getVideoRouteDo,
 	"audioandvideoroute": notImplemented, // TODO
 	"audiomute":          notImplemented, // TODO
@@ -296,4 +299,12 @@ var in180xMap = videoIO_Map{
 		"1B": 1,
 		// LoopOut is not in the map, it is handled separately
 	},
+}
+
+// Audio group map for IN 160x scalers
+// These are 'X46' variables in the manual.
+var in160xGroupAudioVolumeMap = map[string]string{
+	"programvolume":  "1",
+	"micvolume":      "3",
+	"variablevolume": "8",
 }

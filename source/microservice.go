@@ -116,6 +116,8 @@ func doDeviceSpecificGet(socketKey string, setting string, arg1 string, arg2 str
 		return specialEndpointGet(socketKey, "inputstatus", arg1, "", "") // arg1: input
 	case "videomute":
 		return specialEndpointGet(socketKey, "videomute", arg1, "", "") // arg1: output (if not matrix, use '1' for arg1)
+	case "volume":
+		return specialEndpointGet(socketKey, "volume", arg1, "", "") // arg1: channel or group name
 	case "matrixmute":
 		return specialEndpointGet(socketKey, "matrixmute", arg1, arg2, "") // arg1: input, arg2: output
 	case "matrixvolume":
