@@ -40,7 +40,13 @@ Future releases:
 
 ### Creating a developer environment (Windows)
 
-1. [Download Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/).  Make a Docker personal account if you don't already have one.  Since this is an open-source project, Docker Desktop is available at no cost.  Please note that other uses of Docker Desktop may violate the free license.  You might be asked to install and configure WSL during the process.
+1. Make a Docker Hub personal account if you don't already have one.
+
+2. Download a Docker runtime.  You may have to enable/install Windows Subsystem for Linux (WSL) first.
+
+    If you are only working on open-source projects, I recommend [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/). Please note that other uses of Docker Desktop may violate the free license!
+
+    If you want to play it safe and/or want to run a full FOSS setup, I recommend [Rancher Desktop](https://rancherdesktop.io/) instead.
 
 2. Clone this repo into your IDE.  If using VSCode, allow it to download all the helpful Go features like the linter and allow it to run gofmt on save (default).
 
