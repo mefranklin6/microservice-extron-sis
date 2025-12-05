@@ -110,13 +110,12 @@ var internalGetCmdMap = map[string]map[string]string{
 var internalSetCmdMap = map[string]map[string]string{
 	"videoroute": {
 		"Matrix Switcher": "%s*%s%%\r", // arg1: input name | arg2: output name
-		"Scaler":          "%s&\r",     // arg1: input name
-		"Switcher":        "%s!\r",     // arg1: input name
+		"Scaler":          "%s&\r",     // FIXME: 1808 is different | arg1: input name
 	},
 	"audioandvideoroute": {
 		"Matrix Switcher": "%s*%s!\r", // arg1: input name | arg2: output name
-		"Scaler":          "%s!\r",    // arg1: input name
-		"Switcher":        "%!\r",     // arg1: input name
+		"Scaler":          "%s!\r",    // FIXME: 1808 is different | arg1: input name
+		"Switcher":        "%s!\r",    // arg1: input name
 	},
 	"videomute": {
 		"Matrix Switcher":        "%s*1B\r", // arg1: output name
