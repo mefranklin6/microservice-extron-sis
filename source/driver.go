@@ -17,6 +17,7 @@ var deviceTypes = make(map[string]string)              // socketKey -> deviceTyp
 var deviceModels = make(map[string]string)             // socketKey -> modeldescription
 var keepAlivePollRoutines = make(map[string]chan bool) // socketKey -> stop channel
 var keepAlivePollRoutinesMutex sync.Mutex
+var txRxMutexes sync.Map // socketKey -> *sync.Mutex
 
 ///////////////////////////////////////////////////////////////////////////////
 // Main functions //
@@ -1232,6 +1233,16 @@ func specialEndpointSet(socketKey string, endpoint string, arg1 string, arg2 str
 	return value, err
 }
 
+// Returns the RxTx mutex per socket key. Needed to keep Rx/Tx atomic
+func getSocketMutex(socketKey string) *sync.Mutex {
+	if m, ok := txRxMutexes.Load(socketKey); ok {
+		return m.(*sync.Mutex)
+	}
+	m := &sync.Mutex{}
+	actual, _ := txRxMutexes.LoadOrStore(socketKey, m)
+	return actual.(*sync.Mutex)
+}
+
 // Lower level main send command.
 func sendBasicCommand(socketKey string, cmdString string) (string, error) {
 	function := "sendBasicCommand"
@@ -1262,6 +1273,10 @@ func sendBasicCommand(socketKey string, cmdString string) (string, error) {
 // Internal
 func sendBasicCommandDo(socketKey string, cmdString string) (string, error) {
 	function := "sendBasicCommandDo"
+
+	mu := getSocketMutex(socketKey)
+	mu.Lock()
+	defer mu.Unlock()
 
 	err := ensureActiveConnection(socketKey)
 	if err != nil {
