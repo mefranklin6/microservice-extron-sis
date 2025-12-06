@@ -120,7 +120,7 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 			return "false", nil
 		} else {
 			errMsg := function + " - invalid response for DA input status: " + resp
-			framework.AddToErrors(socketKey, errMsg)
+			disconnectAfterBadData(socketKey, function)
 			return errMsg, errors.New(errMsg)
 		}
 	}
@@ -134,6 +134,7 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 			resp = strings.ReplaceAll(resp, " ", "") // remove spaces
 		} else {
 			errMsg := function + " - invalid response for switcher input status: " + resp
+			disconnectAfterBadData(socketKey, function)
 			framework.AddToErrors(socketKey, errMsg)
 			return errMsg, errors.New(errMsg)
 		}
@@ -191,6 +192,7 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 		return stringIntToStringBool(socketKey, result)
 	} else {
 		errMsg := function + " - invalid input name: " + input
+		disconnectAfterBadData(socketKey, function)
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
@@ -219,7 +221,7 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 
 	deviceType, err := findDeviceType(socketKey)
 	if err != nil {
-		errMsg := fmt.Sprintf(function+" - a9ebb - error finding device type: %s", err.Error())
+		errMsg := fmt.Sprintf(function+" - error finding device type: %s", err.Error())
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
@@ -235,6 +237,7 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 			return "true", nil
 		} else {
 			errMsg := function + " - invalid one character response for video mute: " + resp
+			disconnectAfterBadData(socketKey, function)
 			framework.AddToErrors(socketKey, errMsg)
 			return errMsg, errors.New(errMsg)
 		}
@@ -255,6 +258,7 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 				return "true", nil
 			default:
 				errMsg := function + " - invalid loopout response: " + resp
+				disconnectAfterBadData(socketKey, function)
 				framework.AddToErrors(socketKey, errMsg)
 				return errMsg, errors.New(errMsg)
 			}
@@ -284,6 +288,7 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 				return "true", nil
 			default:
 				errMsg := function + " - invalid loopthrough response: " + resp
+				disconnectAfterBadData(socketKey, function)
 				framework.AddToErrors(socketKey, errMsg)
 				return errMsg, errors.New(errMsg)
 			}
@@ -343,6 +348,7 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 		result = string(resp[index])
 	} else {
 		errMsg := function + " - invalid output name: " + output
+		disconnectAfterBadData(socketKey, function)
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
@@ -476,6 +482,7 @@ func setVolumeDo(socketKey string, endpoint string, name string, level string, _
 	expectedResp := "GrpmD" + oid + "*" + deviceVolume
 	if resp != expectedResp {
 		errMsg := function + " - invalid response for setting volume: " + resp + ", expected: " + expectedResp
+		disconnectAfterBadData(socketKey, function)
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
@@ -500,6 +507,7 @@ func setVideoRouteDo(socketKey string, endpoint string, input string, output str
 	case strings.Contains(resp, "In") && strings.Contains(resp, input):
 		return "ok", nil
 	default:
+		disconnectAfterBadData(socketKey, function)
 		return "unknown response: " + resp, nil
 	}
 }
@@ -522,6 +530,7 @@ func setAudioAndVideoRoute(socketKey string, endpoint string, input string, outp
 	case strings.Contains(resp, "In") && strings.Contains(resp, input) && strings.Contains(resp, "All"):
 		return "ok", nil
 	default:
+		disconnectAfterBadData(socketKey, function)
 		return "unknown response: " + resp, nil
 	}
 }
@@ -552,6 +561,7 @@ func setVideoMuteDo(socketKey string, endpoint string, output string, state stri
 		return "ok", nil
 	} else {
 		errMsg := function + " - invalid response for video mute: " + resp
+		disconnectAfterBadData(socketKey, function)
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
@@ -583,6 +593,7 @@ func setVideoSyncMuteDo(socketKey string, endpoint string, output string, state 
 		return "ok", nil
 	} else {
 		errMsg := function + " - invalid response for video sync mute: " + resp
+		disconnectAfterBadData(socketKey, function)
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
@@ -630,6 +641,7 @@ func setMatrixMuteDo(socketKey string, endpoint string, input string, output str
 		return "ok", nil
 	} else {
 		badRespMsg := function + " - unexpected device response: " + resp
+		disconnectAfterBadData(socketKey, function)
 		framework.AddToErrors(socketKey, badRespMsg)
 		return badRespMsg, errors.New(badRespMsg)
 	}
@@ -936,6 +948,15 @@ func formatDeviceErrMessage(socketKey string, resp string) string {
 		return errMsg
 	}
 	return ""
+}
+
+// Closes the socket connection and logs the reason.
+// In testing I found that sending garbage commands messes up the socket read order,
+// so we treat bad data as a desync in order to start fresh.
+func disconnectAfterBadData(socketKey string, callingFuncName string) {
+	function := "disconnectAfterBadData"
+	framework.CloseSocketConnection(socketKey)
+	framework.Log(function + " - Disconnecting: " + socketKey + "after getting bad data in: " + callingFuncName)
 }
 
 // Internal: Formats the command string with the provided arguments.
