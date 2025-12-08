@@ -68,6 +68,9 @@ var internalGetCmdMap = map[string]map[string]string{
 		"Scaler":          "&\r",
 		"Switcher":        "!\r",
 	},
+	"audioandvideoroute": {
+		"Scaler": "!\r",
+	},
 	//"audioroute": {
 	//	"Matrix Switcher": "%s$\r", // arg1: output name
 	//	"Scaler":          "$\r",

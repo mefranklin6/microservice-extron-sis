@@ -92,6 +92,36 @@ func getVideoRouteDo(socketKey string, endpoint string, output string, _ string,
 	if len(resp) == 4 && resp[1] == '0' {
 		resp = `"` + resp[2:]
 	}
+	framework.Log(function + " - " + socketKey + "- Response: " + resp)
+	return resp, nil
+}
+
+func getAudioAndVideoRouteDo(socketKey string, endpoint string, output string, _ string, _ string) (string, error) {
+	function := "getAudioAndVideoRouteDo"
+
+	deviceType, err := findDeviceType(socketKey)
+	if err != nil {
+		errMsg := fmt.Sprintf(function+" - error finding device type: %s", err.Error())
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+	if deviceType != "Matrix Switcher" {
+		output = ""
+	}
+
+	resp, err := deviceTypeDependantCommand(socketKey, "audioandvideoroute", "GET", output, "", "")
+	if err != nil {
+		errMsg := function + "- error getting AV route: " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	// some non-matrix devices have leading zeroes in the response, remove them.
+	// remember the response is wrapped in quotes
+	if len(resp) == 4 && resp[1] == '0' {
+		resp = `"` + resp[2:]
+	}
+	framework.Log(function + " - " + socketKey + "- Response: " + resp)
 	return resp, nil
 }
 
@@ -1229,7 +1259,6 @@ func deviceTypeDependantCommand(socketKey string, endpoint string, method string
 		return errMsg, errors.New(errMsg)
 	}
 
-	framework.Log(fmt.Sprintf("%s - %s - %s response: %s", function, socketKey, endpoint, resp))
 	return resp, nil
 }
 
