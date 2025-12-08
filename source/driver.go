@@ -570,18 +570,16 @@ func setAudioAndVideoRoute(socketKey string, endpoint string, output string, inp
 func setVideoMuteDo(socketKey string, endpoint string, output string, state string, _ string) (string, error) {
 	function := "setVideoMuteDo"
 
-	var cmd string
+	stateCmd := "0"
 	if state == "true" {
-		cmd = "videomute"
-	} else {
-		cmd = "videounmute"
+		stateCmd = "1"
 	}
 
 	// DA with loop through, loop through is output "0"
 	// Matrix switchers need to refer to output by name (ex: "3B")
 	// IN 180x needs to refer to output by number (ex: 1B would be "2")
 	// Non IN 180x Scalers or switchers can just call "1"
-	resp, err := deviceTypeDependantCommand(socketKey, cmd, "SET", output, "", "")
+	resp, err := deviceTypeDependantCommand(socketKey, "videomute", "SET", output, stateCmd, "")
 	if err != nil {
 		errMsg := function + "- error setting video mute: " + err.Error()
 		framework.AddToErrors(socketKey, errMsg)

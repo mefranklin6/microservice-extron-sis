@@ -118,16 +118,10 @@ var internalSetCmdMap = map[string]map[string]string{
 		"Switcher":        "%s!\r",    // arg1: input name
 	},
 	"videomute": {
-		"Matrix Switcher":        "%s*1B\r", // arg1: output name
-		"Scaler":                 "%s*1B\r", // FIXME: 1608 is just 1B, 180x is 1*1B
-		"Switcher":               "1B\r",
-		"Distribution Amplifier": "%s*1B\r",
-	},
-	"videounmute": {
-		"Matrix Switcher":        "%s*0B\r", // arg1: output name
-		"Scaler":                 "%s*0B\r",
-		"Switcher":               "0B\r",
-		"Distribution Amplifier": "%s*0B\r",
+		"Matrix Switcher":        "%s*%sB\r", // arg1: output name
+		"Scaler":                 "%s*%sB\r", // arg1: output name
+		"Switcher":               "%sB\r",
+		"Distribution Amplifier": "%s*%sB\r",
 	},
 	"videosyncmute": {
 		"Matrix Switcher":        "%s*2B\r", // arg1: output name
