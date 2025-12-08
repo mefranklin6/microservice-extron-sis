@@ -119,7 +119,7 @@ var internalSetCmdMap = map[string]map[string]string{
 	},
 	"videomute": {
 		"Matrix Switcher":        "%s*1B\r", // arg1: output name
-		"Scaler":                 "%s*1B\r",
+		"Scaler":                 "%s*1B\r", // FIXME: 1608 is just 1B, 180x is 1*1B
 		"Switcher":               "1B\r",
 		"Distribution Amplifier": "%s*1B\r",
 	},
