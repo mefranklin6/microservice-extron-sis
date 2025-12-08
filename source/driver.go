@@ -489,8 +489,23 @@ func setVolumeDo(socketKey string, endpoint string, name string, level string, _
 	return "ok", nil
 }
 
-func setVideoRouteDo(socketKey string, endpoint string, input string, output string, _ string) (string, error) {
+func setVideoRouteDo(socketKey string, endpoint string, output string, input string, _ string) (string, error) {
 	function := "setVideoRouteDo"
+
+	// Yes, calling this here results in findDeviceType being called twice in a flow,
+	// But we need to throw away the 'output' arg for devices with only one output before formatting
+	deviceType, err := findDeviceType(socketKey)
+	if err != nil {
+		errMsg := fmt.Sprintf(function+" - error finding device type: %s", err.Error())
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+	if deviceType != "Matrix Switcher" {
+		output = ""
+	}
+
+	input = strings.ReplaceAll(input, "\"", "")
+	input = strings.ReplaceAll(input, "'", "")
 
 	resp, err := deviceTypeDependantCommand(socketKey, "videoroute", "SET", input, output, "")
 	if err != nil {
@@ -512,8 +527,23 @@ func setVideoRouteDo(socketKey string, endpoint string, input string, output str
 	}
 }
 
-func setAudioAndVideoRoute(socketKey string, endpoint string, input string, output string, _ string) (string, error) {
+func setAudioAndVideoRoute(socketKey string, endpoint string, output string, input string, _ string) (string, error) {
 	function := "setAudioAndVideoRoute"
+
+	// Yes, calling this here results in findDeviceType being called twice in a flow,
+	// But we need to throw away the 'output' arg for devices with only one output before formatting
+	deviceType, err := findDeviceType(socketKey)
+	if err != nil {
+		errMsg := fmt.Sprintf(function+" - error finding device type: %s", err.Error())
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+	if deviceType != "Matrix Switcher" {
+		output = ""
+	}
+
+	input = strings.ReplaceAll(input, "\"", "")
+	input = strings.ReplaceAll(input, "'", "")
 
 	resp, err := deviceTypeDependantCommand(socketKey, "audioandvideoroute", "SET", input, output, "")
 	if err != nil {
@@ -528,7 +558,9 @@ func setAudioAndVideoRoute(socketKey string, endpoint string, input string, outp
 	case strings.Contains(resp, "error"):
 		return resp, errors.New(resp) // device returned an error code
 	case strings.Contains(resp, "In") && strings.Contains(resp, input) && strings.Contains(resp, "All"):
-		return "ok", nil
+		return "ok", nil // return with confidence
+	case strings.Contains(resp, input): // some scalers
+		return "ok", nil // less confident
 	default:
 		disconnectAfterBadData(socketKey, function)
 		return "unknown response: " + resp, nil
