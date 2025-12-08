@@ -570,6 +570,9 @@ func setAudioAndVideoRoute(socketKey string, endpoint string, output string, inp
 func setVideoMuteDo(socketKey string, endpoint string, output string, state string, _ string) (string, error) {
 	function := "setVideoMuteDo"
 
+	state = strings.ReplaceAll(state, "\"", "")
+	state = strings.ReplaceAll(state, "'", "")
+
 	stateCmd := "0"
 	if state == "true" {
 		stateCmd = "1"
