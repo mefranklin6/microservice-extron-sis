@@ -76,8 +76,8 @@ var internalGetCmdMap = map[string]map[string]string{
 	//	"Scaler":          "$\r",
 	//},
 	"audiomute": {
-		"Matrix Switcher": "%s*B\r", // arg1: output name
-		"Scaler":          "*B\r",
+		"Matrix Switcher": "%s*B\r",        // arg1: output name
+		"Scaler":          "\x1BD%sGRPM\r", // arg1: X48 group number
 		"Switcher":        "\x1BAFMT\r",
 	},
 	"videomute": {
@@ -133,12 +133,9 @@ var internalSetCmdMap = map[string]map[string]string{
 		"Distribution Amplifier": "%s*2B\r",
 	},
 	"audiomute": {
-		"Switcher":               "\x1B1AFMT\r",
-		"Distribution Amplifier": "\x1B%s*1AFMT\r", // arg1: output name
-	},
-	"audiounmute": {
-		"Switcher":               "\x1B0AFMT\r",
-		"Distribution Amplifier": "\x1B%s*0AFMT\r", // arg1: output name
+		"Switcher":               "\x1B%sAFMT\r",     // arg1: mute state (1,0)
+		"Scaler":                 "\x1BD%s*%sGRPM\r", // arg1: X48 mute group number, arg2 mute state (1,0)
+		"Distribution Amplifier": "\x1B%s*%sAFMT\r",  // arg1: output name, arg2: mute state (1,0)
 	},
 	"volume": {
 		"Scaler": "\x1BD%s*%sGRPM\r", // arg1: x46 volume group number, arg2: x47 value (-1000 to 12)
@@ -174,8 +171,8 @@ var getFunctionsMap = map[string]func(string, string, string, string, string) (s
 	"power":              notImplemented, // TODO
 	"volume":             getVolumeDo,
 	"videoroute":         getVideoRouteDo,
-	"audioandvideoroute": notImplemented, // TODO
-	"audiomute":          notImplemented, // TODO
+	"audioandvideoroute": getAudioAndVideoRouteDo,
+	"audiomute":          getAudioMuteDo,
 	"videomute":          getVideoMuteDo,
 	"audioandvideomute":  notImplemented, // TODO
 	"inputstatus":        getInputStatusDo,
@@ -195,13 +192,13 @@ var setFunctionsMap = map[string]func(string, string, string, string, string) (s
 	"audioandvideoroute": setAudioAndVideoRoute,
 	"audiomute":          setAudioMuteDo,
 	"videomute":          setVideoMuteDo,
-	"videosyncmute":      setVideoSyncMuteDo,
-	"audioandvideomute":  notImplemented, // TODO
-	"matrixmute":         setMatrixMuteDo,
-	"matrixvolume":       setMatrixVolumeDo,
-	"setstate":           notImplemented, // TODO
-	"triggerstate":       notImplemented, // TODO
-	"timedtriggerstate":  notImplemented, // TODO
+	//"videosyncmute":      setVideoSyncMuteDo,
+	"audioandvideomute": notImplemented, // TODO
+	"matrixmute":        setMatrixMuteDo,
+	"matrixvolume":      setMatrixVolumeDo,
+	"setstate":          notImplemented, // TODO
+	"triggerstate":      notImplemented, // TODO
+	"timedtriggerstate": notImplemented, // TODO
 }
 
 // Input or Output Names : Index of where to find them in string returns (ex: video mute)
@@ -306,4 +303,12 @@ var in160xGroupAudioVolumeMap = map[string]string{
 	"programvolume":  "1",
 	"micvolume":      "3",
 	"variablevolume": "8",
+}
+
+// Audio group mute map for IN 160x scalers
+// These are 'X48' variables in the manual.
+var in160xGroupAudioMuteMap = map[string]string{
+	"programmute": "2",
+	"micmute":     "4",
+	"outputmute":  "7",
 }

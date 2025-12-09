@@ -64,8 +64,8 @@ func doDeviceSpecificSet(socketKey string, setting string, arg1 string, arg2 str
 		return specialEndpointSet(socketKey, "audioandvideoroute", arg1, arg2, "") // arg1: output, arg2: input
 	case "videomute":
 		return specialEndpointSet(socketKey, "videomute", arg1, arg2, "") // arg1: output, arg2: bool
-	case "videosyncmute":
-		return specialEndpointSet(socketKey, "videosyncmute", arg1, arg2, "") // arg1: output, arg2: bool
+	// case "videosyncmute":
+	// 	return specialEndpointSet(socketKey, "videosyncmute", arg1, arg2, "") // arg1: output, arg2: bool
 	case "audiomute":
 		return specialEndpointSet(socketKey, "audiomute", arg1, arg2, "") // arg1: output, arg2: bool
 	case "volume":
@@ -114,10 +114,14 @@ func doDeviceSpecificGet(socketKey string, setting string, arg1 string, arg2 str
 	switch setting {
 	case "videoroute":
 		return specialEndpointGet(socketKey, "videoroute", arg1, "", "") // arg1: output (if not matrix, use '1' for arg1)
+	case "audioandvideoroute":
+		return specialEndpointGet(socketKey, "audioandvideoroute", arg1, "", "") // arg1: output
 	case "inputstatus":
 		return specialEndpointGet(socketKey, "inputstatus", arg1, "", "") // arg1: input
 	case "videomute":
 		return specialEndpointGet(socketKey, "videomute", arg1, "", "") // arg1: output (if not matrix, use '1' for arg1)
+	case "audiomute":
+		return specialEndpointGet(socketKey, "audiomute", arg1, "", "") // arg1: mute group name
 	case "volume":
 		return specialEndpointGet(socketKey, "volume", arg1, "", "") // arg1: channel or group name
 	case "matrixmute":

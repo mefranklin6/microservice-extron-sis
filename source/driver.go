@@ -397,6 +397,67 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 	return result, nil
 }
 
+// Group mutes. Used for non-matrix devices
+func getAudioMuteDo(socketKey string, endpoint string, name string, _ string, _ string) (string, error) {
+	function := "getAudioMuteDo"
+
+	model, err := findModelName(socketKey)
+	if err != nil {
+		modelErr := function + " - can not find model for: " + socketKey
+		framework.AddToErrors(socketKey, modelErr)
+		return modelErr, errors.New(modelErr)
+	}
+
+	var oid string // mix point number
+	ok := false
+
+	// Check if model is supported
+	switch {
+	case strings.Contains(model, "160") && strings.Contains(model, "IN"): // IN 160x series
+		oid, ok = in160xGroupAudioMuteMap[name]
+	default:
+		notImpMsg := function + "Model: " + model + " is not implemented or does not support 'mute'"
+		framework.AddToErrors(socketKey, notImpMsg)
+		return notImpMsg, errors.New(notImpMsg)
+	}
+
+	// Check if we have the channel name+oid mapping for the model
+	if !ok {
+		errMsg := function + "Can't find mute group OID (X48) for: " + name + " on model: " + model
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	// Try sending the command
+	resp, err := deviceTypeDependantCommand(socketKey, "audiomute", "GET", oid, "", "")
+	if err != nil {
+		errMsg := function + " - error setting volume " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	// Good response is "GrpmD<oid>*<1|0>"
+	resp = strings.ReplaceAll(resp, `"`, ``)
+	if len(resp) == 0 {
+		errMsg := function + " - empty response for group mute"
+		disconnectAfterBadData(socketKey, function)
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+	lastChar := resp[len(resp)-1:]
+	if lastChar != "1" && lastChar != "0" {
+		errMsg := function + " - invalid response for group mute: " + resp
+		disconnectAfterBadData(socketKey, function)
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	if lastChar == "1" {
+		return "true", nil
+	}
+	return "false", nil
+}
+
 func getMatrixMuteDo(socketKey string, endpoint string, input string, output string, _ string) (string, error) {
 	function := "getMatrixMuteDo"
 
@@ -457,8 +518,7 @@ func getMatrixVolumeDo(socketKey string, endpoint string, input string, output s
 
 // Set functions //
 
-// This endpoint has limited functionality within the Extron ecosystem.
-// It is only used for group volume control of scalers.
+// Used for group volume control of non-matrix devices.
 // For dedicated DSP units and matrix switchers, you'll want to use "matrixvolume" instead.
 // Note: IN1804 breaks all the patterns and is not supported yet.
 func setVolumeDo(socketKey string, endpoint string, name string, level string, _ string) (string, error) {
@@ -486,7 +546,7 @@ func setVolumeDo(socketKey string, endpoint string, name string, level string, _
 
 	// Check if we have the channel name+oid mapping for the model
 	if !ok {
-		errMsg := function + "Can't find OID for: " + name + " on model: " + model
+		errMsg := function + "Can't find group OID (X47) for: " + name + " on model: " + model
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
@@ -512,6 +572,65 @@ func setVolumeDo(socketKey string, endpoint string, name string, level string, _
 	expectedResp := "GrpmD" + oid + "*" + deviceVolume
 	if resp != expectedResp {
 		errMsg := function + " - invalid response for setting volume: " + resp + ", expected: " + expectedResp
+		disconnectAfterBadData(socketKey, function)
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+	return "ok", nil
+}
+
+// Group mutes. Used for non-matrix devices
+func setAudioMuteDo(socketKey string, endpoint string, name string, mute string, _ string) (string, error) {
+	function := "setAudioMuteDo"
+
+	mute = strings.ReplaceAll(mute, "\"", "")
+	mute = strings.ReplaceAll(mute, "'", "")
+
+	muteCmd := "0"
+	if mute == "true" {
+		muteCmd = "1"
+	}
+
+	model, err := findModelName(socketKey)
+	if err != nil {
+		modelErr := function + " - can not find model for: " + socketKey
+		framework.AddToErrors(socketKey, modelErr)
+		return modelErr, errors.New(modelErr)
+	}
+
+	var oid string // mix point number
+	ok := false
+
+	// Check if model is supported
+	switch {
+	case strings.Contains(model, "160") && strings.Contains(model, "IN"): // IN 160x series
+		oid, ok = in160xGroupAudioMuteMap[name]
+	default:
+		notImpMsg := function + "Model: " + model + " is not implemented or does not support 'mute'"
+		framework.AddToErrors(socketKey, notImpMsg)
+		return notImpMsg, errors.New(notImpMsg)
+	}
+
+	// Check if we have the channel name+oid mapping for the model
+	if !ok {
+		errMsg := function + "Can't find mute group OID (X48) for: " + name + " on model: " + model
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	// Try sending the command
+	resp, err := deviceTypeDependantCommand(socketKey, "audiomute", "SET", oid, muteCmd, "")
+	if err != nil {
+		errMsg := function + " - error setting volume " + err.Error()
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
+	}
+
+	// Good response is "GrpmD<oid>*<muteCmd>"
+	resp = strings.ReplaceAll(resp, `"`, ``)
+	expectedResp := "GrpmD" + oid + "*" + muteCmd
+	if resp != expectedResp {
+		errMsg := function + " - invalid response for setting group mute: " + resp + ", expected: " + expectedResp
 		disconnectAfterBadData(socketKey, function)
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
@@ -630,37 +749,37 @@ func setVideoMuteDo(socketKey string, endpoint string, output string, state stri
 	}
 }
 
-func setVideoSyncMuteDo(socketKey string, endpoint string, output string, state string, _ string) (string, error) {
-	function := "setVideoSyncMuteDo"
+// func setVideoSyncMuteDo(socketKey string, endpoint string, output string, state string, _ string) (string, error) {
+// 	function := "setVideoSyncMuteDo"
 
-	var cmd string
-	if state == "true" {
-		cmd = "videosyncmute"
-	} else {
-		cmd = "videounmute"
-	}
+// 	var cmd string
+// 	if state == "true" {
+// 		cmd = "videosyncmute"
+// 	} else {
+// 		cmd = "videounmute"
+// 	}
 
-	// DA with loop through, loop through is output "0"
-	// Matrix switchers need to refer to output by name (ex: "3B")
-	// IN 180x needs to refer to output by number (ex: 1B would be "2")
-	// Non IN 180x Scalers or switchers can just call "1"
-	resp, err := deviceTypeDependantCommand(socketKey, cmd, "SET", output, "", "")
-	if err != nil {
-		errMsg := function + "- error setting video sync mute: " + err.Error()
-		framework.AddToErrors(socketKey, errMsg)
-		return errMsg, errors.New(errMsg)
-	}
+// 	// DA with loop through, loop through is output "0"
+// 	// Matrix switchers need to refer to output by name (ex: "3B")
+// 	// IN 180x needs to refer to output by number (ex: 1B would be "2")
+// 	// Non IN 180x Scalers or switchers can just call "1"
+// 	resp, err := deviceTypeDependantCommand(socketKey, cmd, "SET", output, "", "")
+// 	if err != nil {
+// 		errMsg := function + "- error setting video sync mute: " + err.Error()
+// 		framework.AddToErrors(socketKey, errMsg)
+// 		return errMsg, errors.New(errMsg)
+// 	}
 
-	// Good response for 'all' devices: Vmt(output int)*(status int)
-	if strings.Contains(resp, "Vmt") && strings.Contains(resp, output) {
-		return "ok", nil
-	} else {
-		errMsg := function + " - invalid response for video sync mute: " + resp
-		disconnectAfterBadData(socketKey, function)
-		framework.AddToErrors(socketKey, errMsg)
-		return errMsg, errors.New(errMsg)
-	}
-}
+// 	// Good response for 'all' devices: Vmt(output int)*(status int)
+// 	if strings.Contains(resp, "Vmt") && strings.Contains(resp, output) {
+// 		return "ok", nil
+// 	} else {
+// 		errMsg := function + " - invalid response for video sync mute: " + resp
+// 		disconnectAfterBadData(socketKey, function)
+// 		framework.AddToErrors(socketKey, errMsg)
+// 		return errMsg, errors.New(errMsg)
+// 	}
+// }
 
 // Built for DMP DSP's
 // Note, this is a 3 arg funciton.  The last argument (state) true or false is in the request body
@@ -708,25 +827,6 @@ func setMatrixMuteDo(socketKey string, endpoint string, input string, output str
 		framework.AddToErrors(socketKey, badRespMsg)
 		return badRespMsg, errors.New(badRespMsg)
 	}
-}
-
-func setAudioMuteDo(socketKey string, endpoint string, output string, state string, _ string) (string, error) {
-	function := "setAudioMuteDo"
-
-	var cmd string
-	if state == "true" {
-		cmd = "audiomute"
-	} else {
-		cmd = "audiounmute"
-	}
-
-	resp, err := deviceTypeDependantCommand(socketKey, cmd, "SET", output, "", "")
-	if err != nil {
-		errMsg := function + "- error setting audio mute: " + err.Error()
-		framework.AddToErrors(socketKey, errMsg)
-		return errMsg, errors.New(errMsg)
-	}
-	return resp, nil
 }
 
 // Note, this is a 3 arg funciton.  The last argument (level 0-100) is in the request body
