@@ -237,12 +237,15 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 		framework.AddToErrors(socketKey, modelErr)
 		return modelErr, errors.New(modelErr)
 	}
-
-	var outputNum string
 	switch {
 	case strings.Contains(model, "160") && strings.Contains(model, "IN"): // IN 160x series special handling
-		outputNum, _ = in160xVideoMuteMap[output]
+		outputNum, ok := in160xVideoMuteMap[output]
 		output = outputNum
+		if !ok {
+			errMsg := function + " - can't find video mute mapping for provided output on model: " + model
+			framework.AddToErrors(socketKey, errMsg)
+			return errMsg, errors.New(errMsg)
+		}
 	} // other devices like crosspoints you can call the named output directly ex: "3A"
 
 	resp, err := deviceTypeDependantCommand(socketKey, "videomute", "GET", output, "", "")
@@ -741,10 +744,24 @@ func setVideoMuteDo(socketKey string, endpoint string, output string, state stri
 		stateCmd = "1"
 	}
 
-	// DA with loop through, loop through is output "0"
-	// Matrix switchers need to refer to output by name (ex: "3B")
-	// IN 180x needs to refer to output by number (ex: 1B would be "2")
-	// Non IN 180x Scalers or switchers can just call "1"
+	model, err := findModelName(socketKey)
+	if err != nil {
+		modelErr := function + " - can not find model for: " + socketKey
+		framework.AddToErrors(socketKey, modelErr)
+		return modelErr, errors.New(modelErr)
+	}
+	switch {
+	case strings.Contains(model, "160") && strings.Contains(model, "IN"): // IN 160x series special handling
+		outputNum, ok := in160xVideoMuteMap[output]
+		output = outputNum
+		if !ok {
+			errMsg := function + " - can't find video mute mapping" + output + "for provided output on model: " + model
+			framework.AddToErrors(socketKey, errMsg)
+			return errMsg, errors.New(errMsg)
+		}
+	} // other devices like crosspoints you can call the named output directly ex: "3A"
+
+	// TODO: DA mapping (ex: /loopthrough should be command 0)
 	resp, err := deviceTypeDependantCommand(socketKey, "videomute", "SET", output, stateCmd, "")
 	if err != nil {
 		errMsg := function + "- error setting video mute: " + err.Error()
