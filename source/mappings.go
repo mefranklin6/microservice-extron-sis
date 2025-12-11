@@ -312,3 +312,11 @@ var in160xGroupAudioMuteMap = map[string]string{
 	"micmute":     "4",
 	"outputmute":  "7",
 }
+
+// Video mute map for IN 160x scalers
+// These are 'X2" variables in the manual
+var in160xVideoMuteMap = map[string]string{
+	"1A": "1", // HDMI
+	"1B": "2", // HDMI
+	"1C": "3", // DTP / HDbT output
+}
