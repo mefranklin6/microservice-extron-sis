@@ -231,7 +231,7 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, _ string) (string, error) {
 	function := "getVideoMuteDo"
 
-	resp, err := deviceTypeDependantCommand(socketKey, "videomute", "GET", "", "", "")
+	resp, err := deviceTypeDependantCommand(socketKey, "videomute", "GET", output, "", "")
 	if err != nil {
 		errMsg := function + "- error getting video mute status: " + err.Error()
 		framework.AddToErrors(socketKey, errMsg)
@@ -1328,7 +1328,7 @@ func deviceTypeDependantCommand(socketKey string, endpoint string, method string
 
 	deviceType, err := findDeviceType(socketKey)
 	if err != nil {
-		errMsg := fmt.Sprintf(function+" - a9ebb - error finding device type: %s", err.Error())
+		errMsg := fmt.Sprintf(function+" - error finding device type: %s", err.Error())
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
@@ -1339,7 +1339,7 @@ func deviceTypeDependantCommand(socketKey string, endpoint string, method string
 	} else if method == "SET" {
 		cmdMap = internalSetCmdMap
 	} else {
-		errMsg := fmt.Sprintf(function+" - 8deoi - invalid method: %s", method)
+		errMsg := fmt.Sprintf(function+" - invalid method: %s", method)
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
@@ -1349,13 +1349,13 @@ func deviceTypeDependantCommand(socketKey string, endpoint string, method string
 	cmdString = formatCommand(cmdTemplate, arg1, arg2, arg3)
 
 	if cmdString == "" {
-		errMsg := fmt.Sprintf(function+" - 8deoi - no command found for device type: %s", deviceType)
+		errMsg := fmt.Sprintf(function+" - no command found for device type: %s", deviceType)
 		framework.AddToErrors(socketKey, errMsg)
 		return errMsg, errors.New(errMsg)
 	}
 	resp, err := sendBasicCommand(socketKey, cmdString)
 	if err != nil {
-		errMsg := fmt.Sprintf(function+" - cid6bw - error getting endpoint: %s: %s", endpoint, err.Error())
+		errMsg := fmt.Sprintf(function+" - error getting endpoint: %s: %s", endpoint, err.Error())
 		return errMsg, errors.New(errMsg)
 	}
 
