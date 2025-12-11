@@ -145,9 +145,9 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 	if strings.Count(resp, "*") == 1 && len(resp) >= 2 && string(resp[1]) == "*" && (string(resp[0]) == "1" || string(resp[0]) == "0") {
 		input := string(resp[0])
 		if input == "1" {
-			return "true", nil
+			return `"true"`, nil
 		} else if input == "0" {
-			return "false", nil
+			return `"false"`, nil
 		} else {
 			errMsg := function + " - invalid response for DA input status: " + resp
 			disconnectAfterBadData(socketKey, function)
@@ -260,11 +260,11 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 	// Could be IN 16xx or a switcher
 	if len(resp) == 1 {
 		if resp == "0" {
-			return "false", nil
+			return `"false"`, nil
 		} else if resp == "1" {
-			return "true", nil
+			return `"true"`, nil
 		} else if resp == "2" { // sync mute
-			return "true", nil
+			return `"true"`, nil
 		} else {
 			errMsg := function + " - invalid one character response for video mute: " + resp
 			disconnectAfterBadData(socketKey, function)
@@ -281,11 +281,11 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 			result := string(resp[2])
 			switch result {
 			case "0":
-				return "false", nil
+				return `"false"`, nil
 			case "1":
-				return "true", nil
+				return `"true"`, nil
 			case "2":
-				return "true", nil
+				return `"true"`, nil
 			default:
 				errMsg := function + " - invalid loopout response: " + resp
 				disconnectAfterBadData(socketKey, function)
@@ -311,11 +311,11 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 			result := string(resp[0])
 			switch result {
 			case "0":
-				return "false", nil
+				return `"false"`, nil
 			case "1":
-				return "true", nil
+				return `"true"`, nil
 			case "2":
-				return "true", nil
+				return `"true"`, nil
 			default:
 				errMsg := function + " - invalid loopthrough response: " + resp
 				disconnectAfterBadData(socketKey, function)
@@ -342,11 +342,11 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 		result := string(resp[outputInt-1]) //-1: convert for 0-based index
 		switch result {
 		case "0":
-			return "false", nil
+			return `"false"`, nil
 		case "1":
-			return "true", nil
+			return `"true"`, nil
 		case "2":
-			return "true", nil
+			return `"true"`, nil
 		}
 	}
 
@@ -453,9 +453,9 @@ func getAudioMuteDo(socketKey string, endpoint string, name string, _ string, _ 
 	}
 
 	if lastChar == "1" {
-		return "true", nil
+		return `"true"`, nil
 	}
-	return "false", nil
+	return `"false"`, nil
 }
 
 func getMatrixMuteDo(socketKey string, endpoint string, input string, output string, _ string) (string, error) {
@@ -476,9 +476,9 @@ func getMatrixMuteDo(socketKey string, endpoint string, input string, output str
 	}
 	resp = strings.ReplaceAll(resp, `"`, ``)
 	if resp == "1" {
-		return "true", nil
+		return `"true"`, nil
 	} else if resp == "0" {
-		return "false", nil
+		return `"false"`, nil
 	} else {
 		errMsg := function + " - invalid response for matrix mute: " + resp
 		framework.AddToErrors(socketKey, errMsg)
