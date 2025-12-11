@@ -82,7 +82,7 @@ var internalGetCmdMap = map[string]map[string]string{
 	},
 	"videomute": {
 		"Matrix Switcher":        "\x1BVM\r",
-		"Scaler":                 "B\r",
+		"Scaler":                 "%s*B\r",
 		"Switcher":               "B\r",
 		"Distribution Amplifier": "B\r",
 	},
