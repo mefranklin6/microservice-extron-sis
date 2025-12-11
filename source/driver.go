@@ -231,6 +231,20 @@ func getInputStatusDo(socketKey string, endpoint string, input string, _ string,
 func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, _ string) (string, error) {
 	function := "getVideoMuteDo"
 
+	model, err := findModelName(socketKey)
+	if err != nil {
+		modelErr := function + " - can not find model for: " + socketKey
+		framework.AddToErrors(socketKey, modelErr)
+		return modelErr, errors.New(modelErr)
+	}
+
+	var outputNum string
+	switch {
+	case strings.Contains(model, "160") && strings.Contains(model, "IN"): // IN 160x series special handling
+		outputNum, _ = in160xVideoMuteMap[output]
+		output = outputNum
+	} // other devices like crosspoints you can call the named output directly ex: "3A"
+
 	resp, err := deviceTypeDependantCommand(socketKey, "videomute", "GET", output, "", "")
 	if err != nil {
 		errMsg := function + "- error getting video mute status: " + err.Error()
@@ -248,13 +262,6 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 
 	resp = strings.ReplaceAll(resp, " ", "")
 	resp = strings.ReplaceAll(resp, `"`, ``)
-
-	deviceType, err := findDeviceType(socketKey)
-	if err != nil {
-		errMsg := fmt.Sprintf(function+" - error finding device type: %s", err.Error())
-		framework.AddToErrors(socketKey, errMsg)
-		return errMsg, errors.New(errMsg)
-	}
 
 	// Simple device, only one character reply
 	// Could be IN 16xx or a switcher
@@ -295,6 +302,13 @@ func getVideoMuteDo(socketKey string, endpoint string, output string, _ string, 
 		} else { // 1808 is only known LoopOut device, this was called on the wrong device, or we need update handling
 			framework.AddToErrors(socketKey, function+" - LoopOut called, but device is not IN1808 "+resp)
 		}
+	}
+
+	deviceType, err := findDeviceType(socketKey)
+	if err != nil {
+		errMsg := fmt.Sprintf(function+" - error finding device type: %s", err.Error())
+		framework.AddToErrors(socketKey, errMsg)
+		return errMsg, errors.New(errMsg)
 	}
 
 	// Distribution Amplifier
