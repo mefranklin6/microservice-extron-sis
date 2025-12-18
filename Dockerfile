@@ -24,7 +24,7 @@ RUN go get -u \
     && go build -o /go/bin/microservice
 
 
-FROM gcr.io/distroless/base-debian12:nonroot
+FROM gcr.io/distroless/base:nonroot
 
 COPY --from=builder /go/bin/microservice /microservice
 
